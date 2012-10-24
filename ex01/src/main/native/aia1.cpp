@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
 Mat doSomethingThatMyTutorIsGonnaLike(Mat& img){
   
   // TO DO !!!
+//test
   // a too easy example:
   return img.clone();
 
