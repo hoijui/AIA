@@ -63,10 +63,10 @@ int main(int argc, char** argv) {
 
 // function that performs some kind of (simple) image processing
 Mat doSomethingThatMyTutorIsGonnaLike(Mat& img){
-  
+  Mat gray_image;
   // TO DO !!!
-//test
+     cvtColor( img, gray_image, CV_RGB2GRAY );
   // a too easy example:
-  return img.clone();
+  return gray_image;
 
 }
