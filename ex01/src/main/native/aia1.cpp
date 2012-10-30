@@ -73,6 +73,7 @@ Mat doSomethingThatMyTutorIsGonnaLike(const char* inputImgFilePath){
   cvSaveImage("result_grey.jpg", img1);
 
   IplImage* out = cvCreateImage( cvGetSize(img1), IPL_DEPTH_8U, 1 );
+  cvShowImage("Result gray", img1);
   // TO DO !!!
   //   cvtColor( img, grey_image, CV_RGB2GRAY );
   //	Rect r(150, 80, 180, 230);
@@ -86,5 +87,4 @@ Mat doSomethingThatMyTutorIsGonnaLike(const char* inputImgFilePath){
   //   cvConvertImage(gray_image, mirrored_gray_image, CV_CVTIMG_FLIP);
   // a too easy example:
   return out;
-
 }
