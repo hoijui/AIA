@@ -26,8 +26,8 @@ int main(int argc, char** argv) {
   }
   
   // window names
-  string win1 = string ("Input image");
-  string win2 = string ("Result");
+  string win1 = string ("Input image colored");
+  string win2 = string ("Result grey and optimalized");
   
   // some images
   Mat inputImage, outputImage;
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   waitKey(0);
 
   // save result
-  imwrite("result.jpg", outputImage);
+  imwrite("result_grey_optimized.jpg", outputImage);
 
   return 0;
 
@@ -63,10 +63,28 @@ int main(int argc, char** argv) {
 
 // function that performs some kind of (simple) image processing
 Mat doSomethingThatMyTutorIsGonnaLike(Mat& img){
-  Mat gray_image;
+  Mat grey_image; 
+  IplImage *img1 = cvLoadImage("input.jpg", 0);
+
+  // show grey input image
+  string win3 = string ("Input image grey");
+  
+  //save grey input image
+  cvSaveImage("result_grey.jpg", img1);
+
+  IplImage* out = cvCreateImage( cvGetSize(img1), IPL_DEPTH_8U, 1 );
   // TO DO !!!
-     cvtColor( img, gray_image, CV_RGB2GRAY );
+  //   cvtColor( img, grey_image, CV_RGB2GRAY );
+  //	Rect r(150, 80, 180, 230);
+  //	Mat out = img(r);
+	//IplImage img1 = img;
+  cvEqualizeHist( img1, out );
+  //imwrite("result_grey.jpg", img1);
+	
+
+  //   cvEqualizeHist( gray_image, out );
+  //   cvConvertImage(gray_image, mirrored_gray_image, CV_CVTIMG_FLIP);
   // a too easy example:
-  return gray_image;
+  return out;
 
 }

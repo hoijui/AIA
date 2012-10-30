@@ -69,23 +69,39 @@ in fig. \ref{fig:../../../target/input}.
 
 \subsection{Modify}
 
-The modification that shall impress our tutor will take the emph{colored} picture as source 
-and create a \emph{grey} version of it. Herefor, the following command uses the \emph{colored} 
-picture \emph{img} and creates the \emph{grey} image \emph{gray\_image}:
-\begin{lstlisting}
-cvtColor( img, gray_image, CV_RGB2GRAY ).
-\end{lstlisting}
 
-\newpage
+When a photograph is taken, images are captured with a limited dyanmic range because of 
+the limitations of camera sensors. In using a histogram equalization, 
+we use a modification that shall impress our tutor:
+The brightness distribution of an image can be equalized and 
+thereby we increase the contrast of the image and in a sense additionally the dynamic range.
+For doing so, the following function will be used:
+\begin{lstlisting}
+cvEqualizeHist ( img1, out );
+\end{lstlisting}
+For this, the \emph{colored} picture given as source can't be used,
+because of the requirements of the function. It has to be prepared a \emph{grey} version of it,
+which we call \emph{img1}. The function creates an \emph{optimized} image, which we call \emph{out}.
+This variable will be returned.
+For the comparison, all three picture versions will be saved: 
+the \emph{colored} image, 
+the \emph{grey} image and
+the \emph{optimized} image.
+
 
 \subsection{Save}
 
-You can see the plot of the modified \emph{grey} picture as saved outcome
-in fig. \ref{fig:../../../target/result}.
+You can see the plot of the optimized \emph{grey} picture as it is saved 
+in fig. \ref{fig:../../../target/result_grey_optimized}.
 
-\image{../../../target/result}{0.5}{%
-		Modified picture (\emph{grey}).}
+\image{../../../target/result_grey_optimized}{0.5}{%
+		Modified picture (\emph{grey}) and (\emph{optimized}).}
 
+\newpage
 
+In comparison with the original \emph{grey} picture in fig. \ref{fig:../../../target/result_grey}., you can see the optimization quite well and the application of the Histogram Equalization was a great success! 
+
+\image{../../../target/result_grey}{0.5}{%
+		Modified picture (\emph{grey}) as original.}
 
 \end{document}
