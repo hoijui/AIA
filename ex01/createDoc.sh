@@ -14,8 +14,12 @@ if [ ! -f input.jpg ]; then
 fi
 
 if [ ! -f result.jpg ]; then
-	cmake ..
-	make
+	if [ ! -f aia1 ]; then
+		if [ ! -f CMakeCache.txt ]; then
+			cmake ..
+		fi
+		make
+	fi
 	./aia1 input.jpg
 fi
 
