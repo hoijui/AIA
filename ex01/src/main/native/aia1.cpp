@@ -13,7 +13,7 @@ using namespace std;
 using namespace cv;
 
 // function that performs some kind of (simple) image processing
-Mat doSomethingThatMyTutorIsGonnaLike(Mat&);
+Mat doSomethingThatMyTutorIsGonnaLike(const char* inputImgFilePath);
 
 // usage: path to image in argv[1]
 // main function, loads and saves image
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
   // do something (reasonable)
   cout << "Processing: start" << endl;
-  outputImage = doSomethingThatMyTutorIsGonnaLike( inputImage );
+  outputImage = doSomethingThatMyTutorIsGonnaLike( argv[1] );
   cout << "Processing: done" << endl;
 
   namedWindow( win2.c_str(), CV_WINDOW_AUTOSIZE );
@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
 }
 
 // function that performs some kind of (simple) image processing
-Mat doSomethingThatMyTutorIsGonnaLike(Mat& img){
+Mat doSomethingThatMyTutorIsGonnaLike(const char* inputImgFilePath){
   Mat grey_image; 
-  IplImage *img1 = cvLoadImage("input.jpg", 0);
+  IplImage *img1 = cvLoadImage(inputImgFilePath, 0);
 
   // show grey input image
   string win3 = string ("Input image grey");
