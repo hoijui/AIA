@@ -1,8 +1,8 @@
 //============================================================================
-// Name        : aia1.cpp
-// Author      : Ronny Haensch
-// Version     : 1.0
-// Copyright   : -
+// Name : aia1.cpp
+// Author : Ronny Haensch
+// Version : 1.0
+// Copyright : -
 // Description : load image using opencv, do something nice, save image
 //============================================================================
 
@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
   
   // window names
   string win1 = string ("Input image colored");
-  string win2 = string ("Result grey and optimalized");
+  string win2 = string ("Result grey and optimized");
   
   // some images
   Mat inputImage, outputImage;
@@ -63,28 +63,21 @@ int main(int argc, char** argv) {
 
 // function that performs some kind of (simple) image processing
 Mat doSomethingThatMyTutorIsGonnaLike(const char* inputImgFilePath){
-  Mat grey_image; 
   IplImage *img1 = cvLoadImage(inputImgFilePath, 0);
 
   // show grey input image
   string win3 = string ("Input image grey");
+  IplImage* out = cvCreateImage( cvGetSize(img1), IPL_DEPTH_8U, 1 );
+  cvShowImage("Result grey", img1);
   
   //save grey input image
   cvSaveImage("result_grey.jpg", img1);
 
-  IplImage* out = cvCreateImage( cvGetSize(img1), IPL_DEPTH_8U, 1 );
-  cvShowImage("Result gray", img1);
-  // TO DO !!!
-  //   cvtColor( img, grey_image, CV_RGB2GRAY );
-  //	Rect r(150, 80, 180, 230);
-  //	Mat out = img(r);
-	//IplImage img1 = img;
+  //Histogram Equalization
   cvEqualizeHist( img1, out );
-  //imwrite("result_grey.jpg", img1);
-	
 
-  //   cvEqualizeHist( gray_image, out );
-  //   cvConvertImage(gray_image, mirrored_gray_image, CV_CVTIMG_FLIP);
   // a too easy example:
+  // cvConvertImage(gray_image, mirrored_gray_image, CV_CVTIMG_FLIP);
+  
   return out;
 }
