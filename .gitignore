@@ -1,2 +1,7 @@
 *.pdf
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.gif
 target/
