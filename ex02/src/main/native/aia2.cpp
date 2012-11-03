@@ -8,9 +8,21 @@
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 using namespace std;
 using namespace cv;
+
+// parameters
+//! Threshold for image binarization.
+static const int binThreshold = 90;
+//! Number of applications of the erosion operator.
+static const int numOfErosions = 1;
+//! Number of dimensions in the FD.
+static const int steps = 34;
+//! Threshold for detection.
+static const double detThreshold = 0.5;
 
 void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k);
 Mat makeFD(Mat& contour);
@@ -41,12 +53,6 @@ int main(int argc, char** argv) {
 		cerr << "ERROR: Cannot load class examples in\n" << argv[2] << "\n" << argv[3] << endl;
 		return -1;
 	}
-
-	// parameters
-	int binThreshold; // threshold for image binarization
-	int numOfErosions; // number of applications of the erosion operator
-	int steps; // number of dimensions of the FD
-	double detThreshold; // threshold for detection
 
 	// get contour line from images
 	vector<Mat> contourLines1;
@@ -181,7 +187,24 @@ Mat makeFD(Mat& contour) {
  */
 void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k){
 
-	// TODO
+	//image preparation
+    threshold(img,img,thresh,
+              255, //set all points meeting the threshold to 255
+              THRESH_BINARY //output is a binary image
+              );
+
+    erode(img,img,
+          Mat(), //Mat() leads to a 3x3 square kernel
+          Point(-1,-1), //upper corner
+          k);
+
+    //copy image as it is altered by findContours(..)
+    Mat imageCopy(img);
+
+    findContours(imageCopy,objList,
+                 CV_RETR_EXTERNAL, //only outer contours
+                 CV_CHAIN_APPROX_NONE //no approximation
+                 );
 }
 
 /**
