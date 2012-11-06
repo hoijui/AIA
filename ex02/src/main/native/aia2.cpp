@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
     Mat fd1 = makeFD(contourLines1.front());
     Mat fd2 = makeFD(contourLines2.front());
 
+    cout << "cols: " << fd1.cols << " rows: " << fd1.rows << endl;
+
     // normalize  fourier descriptor
     // TODO
     //steps = ???;
@@ -170,11 +172,22 @@ Mat normFD(Mat& fd, int n)
     }
     else
     {
-        Mat out(fd);
+        //Range rowRange(0,n);
+        Mat out(n,1,CV_32FC2);
+        float fScale = fd.at<Vec2f>(0,1)[0];
+        for(int i = 0; i < n/2; i++)
+        {
+            out.row(i) = fd.row(i) / fScale;
+            out.row(n-i) = fd.row(n-i) / fScale;
+
+            out.at<Vec2f>(0,i)[0] = sqrt(pow(out.at<Vec2f>(0,i)[0],2) + pow(out.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
+                                                                                                       //carttopolar was not used, custom function written instead
+        }
+        out.at<Vec2f>(0,0)[0] = 0;
         //translation invariance -> first element to 0
-        //scale invariance -> divide all elements by 2nd element
-        //rotation invariance -> delete phase information using cartToPolar(..)
         //ignore high frequencies -> delete middle elemenents of vector so that only first and last n/2 elements remain
+        //scale invariance -> divide all elements by 2nd element
+        return out;
     }
 }
 
@@ -223,6 +236,10 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
           Mat(), //Mat() leads to a 3x3 square kernel
           Point(-1,-1), //upper corner
           k);
+
+   /* namedWindow("test", CV_WINDOW_AUTOSIZE);
+    imshow("test", img);
+    waitKey(0);*/
 
     //copy image as it is altered by findContours(..)
     Mat imageCopy(img);
