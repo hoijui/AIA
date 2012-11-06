@@ -73,6 +73,11 @@ int main(int argc, char** argv) {
     Mat fd1_norm = normFD(fd1, steps);
     Mat fd2_norm = normFD(fd2, steps);
 
+    //plot the intermediate results
+    plotFD(fd1_norm,"Fourier Descriptor 1",0);
+    plotFD(fd2_norm,"Fourier Descriptor 2",0);
+
+
     // process query image
     // load image as gray-scale, path in argv[1]
     Mat query = imread( argv[1], 0);
@@ -175,10 +180,12 @@ Mat normFD(Mat& fd, int n)
         //Range rowRange(0,n);
         Mat out(n,1,CV_32FC2);
         float fScale = fd.at<Vec2f>(0,1)[0];
+
         for(int i = 0; i < n/2; i++)
         {
             out.row(i) = fd.row(i) / fScale;
-            out.row(n-i) = fd.row(n-i) / fScale;
+
+            out.row(n-1-i) = fd.row(fd.rows-1-i) / fScale;
 
             out.at<Vec2f>(0,i)[0] = sqrt(pow(out.at<Vec2f>(0,i)[0],2) + pow(out.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
                                                                                                        //carttopolar was not used, custom function written instead
@@ -256,9 +263,30 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
  * @param win  the window name
  * @param dur  wait number of ms or until key is pressed
  */
-void plotFD(Mat& fd, string win, double dur) {
+void plotFD(Mat& fd, string win, double dur)
+{
+    Mat invFd(fd);
+    dft(invFd,invFd); //inverse dft == dft on dft
 
-  //todo
+    float fMaxX = -HUGE_VAL;
+    float fMaxY = -HUGE_VAL;
+    for(int i = 0; i<invFd.rows;i++)
+    {
+        fMaxX = max(invFd.at<Vec2f>(0,i)[0],fMaxX);
+        fMaxY = max(invFd.at<Vec2f>(0,i)[1],fMaxY);
+    }
+
+    //cout << fMaxX << " " << fMaxY << endl;
+
+    float fMin = min(fMaxX,fMaxY);
+    fMaxY *= 100 / fMin;
+    fMaxX *= 100 / fMin;
+
+    Mat img = Mat::zeros(fMaxX,fMaxY,fd.type());
+    for(int i = 0; i<invFd.rows;i++)
+    {
+        //! @todo Plot white pixels in the image using contour points
+    }
 
 }
 
