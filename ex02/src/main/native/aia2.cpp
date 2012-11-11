@@ -30,6 +30,8 @@ Mat normFD(Mat& fd, int n);
 void showImage(Mat& img, string win, double dur=-1);
 void plotFD(Mat& fd, string win, double dur=-1);
 
+#define DEBUG_MODE 1
+
 /**
  * main function, loads and saves image
  * usage:
@@ -47,8 +49,9 @@ int main(int argc, char** argv) {
 
     // process image data base
     // load image as gray-scale, paths in argv[2] and argv[3]
-    Mat exC1 = imread(argv[2], 0);
-    Mat exC2  = imread(argv[3], 0);
+    cout << argv[2] << endl;
+    Mat exC1 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
+    Mat exC2  = imread(argv[3], CV_LOAD_IMAGE_GRAYSCALE );
     if ((!exC1.data) || (!exC2.data)) {
         cerr << "ERROR: Cannot load class examples in\n" << argv[2] << "\n" << argv[3] << endl;
         return -1;
@@ -60,18 +63,42 @@ int main(int argc, char** argv) {
 
     getContourLine(exC1, contourLines1, binThreshold, numOfErosions);
     getContourLine(exC2, contourLines2, binThreshold, numOfErosions);
+#if DEBUG_MODE
+    //plot contour line
+    Mat testImage(exC1.rows, exC1.cols, CV_8UC3);
+    vector<Mat> temp2;
+    temp2.push_back(exC1);
+    temp2.push_back(exC1);
+    temp2.push_back(exC1);
+    merge(temp2, testImage);
+
+    Mat cont = contourLines1.front();
+    cout << cont.at<Vec2i>(0,1)[1] << " " << cont.at<Vec2i>(0,1)[0] << endl;
+    for(int i = 0; i< cont.rows; i++)
+    {
+        testImage.at<Vec3b>(cont.at<Vec2i>(0,i)[1], cont.at<Vec2i>(0,i)[0]) = Vec3b(0,0,255);
+    }
+
+    namedWindow("TestWindow", CV_WINDOW_AUTOSIZE);
+    imshow("TestWindow",testImage);
+    waitKey(0);
+#endif
+
 
     // calculate fourier descriptor
     Mat fd1 = makeFD(contourLines1.front());
     Mat fd2 = makeFD(contourLines2.front());
-
-    cout << "cols: " << fd1.cols << " rows: " << fd1.rows << endl;
 
     // normalize  fourier descriptor
     // TODO
     //steps = ???;
     Mat fd1_norm = normFD(fd1, steps);
     Mat fd2_norm = normFD(fd2, steps);
+
+#if DEBUG_MODE
+    cout << "Main: " << endl << fd1_norm;
+    plotFD(fd1_norm,"Normalized fourier descriptor",0);
+#endif
 
     //plot the intermediate results
     plotFD(fd1_norm,"Fourier Descriptor 1",0);
@@ -189,6 +216,10 @@ Mat normFD(Mat& fd, int n)
 
             out.at<Vec2f>(0,i)[0] = sqrt(pow(out.at<Vec2f>(0,i)[0],2) + pow(out.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
                                                                                                        //carttopolar was not used, custom function written instead
+            out.at<Vec2f>(0,i)[1] = 0;
+
+            out.at<Vec2f>(0,n-1-i)[0] = sqrt(pow(out.at<Vec2f>(0,n-1-i)[0],2) + pow(out.at<Vec2f>(0,n-1-i)[1],2));
+            out.at<Vec2f>(0,n-1-i)[1] = 0;
         }
         out.at<Vec2f>(0,0)[0] = 0;
         //translation invariance -> first element to 0
@@ -244,15 +275,16 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
           Point(-1,-1), //upper corner
           k);
 
-   /* namedWindow("test", CV_WINDOW_AUTOSIZE);
+    /*namedWindow("test", CV_WINDOW_AUTOSIZE);
     imshow("test", img);
     waitKey(0);*/
 
     //copy image as it is altered by findContours(..)
-    Mat imageCopy(img);
+    Mat imageCopy;
+    imageCopy = img.clone();
 
     findContours(imageCopy,objList,
-                 CV_RETR_EXTERNAL, //only outer contours
+                 CV_RETR_LIST , //only outer contours
                  CV_CHAIN_APPROX_NONE //no approximation
                  );
 }
@@ -265,28 +297,39 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
  */
 void plotFD(Mat& fd, string win, double dur)
 {
-    Mat invFd(fd);
-    dft(invFd,invFd); //inverse dft == dft on dft
+    Mat invFd;
+    invFd = fd.clone();
+    dft(invFd,invFd,DFT_INVERSE | DFT_SCALE); //inverse dft
+    //invFd *= 100;
+    //invFd.convertTo(invFd,CV_32SC2);
+    //cout << invFd << endl;
 
     float fMaxX = -HUGE_VAL;
     float fMaxY = -HUGE_VAL;
-    for(int i = 0; i<invFd.rows;i++)
+    for(int i = 0; i<invFd.rows;i++) //find maximum image dimensions
     {
         fMaxX = max(invFd.at<Vec2f>(0,i)[0],fMaxX);
         fMaxY = max(invFd.at<Vec2f>(0,i)[1],fMaxY);
     }
 
-    //cout << fMaxX << " " << fMaxY << endl;
+    float fMinimum = min(fMaxX,fMaxY);
+    invFd *= 100 / fMinimum;
+    invFd.convertTo(invFd,CV_32SC2);
 
-    float fMin = min(fMaxX,fMaxY);
-    fMaxY *= 100 / fMin;
-    fMaxX *= 100 / fMin;
+    cout << "plotFD: " << fMaxX << " " << fMaxY << endl;
 
-    Mat img = Mat::zeros(fMaxX,fMaxY,fd.type());
+    Mat img = Mat::zeros(fMaxY,fMaxX,CV_8UC3);
+    //cout << "plotFD: Image type = " << fd.type() << " other types are " << CV_32FC2 << endl;
+    cout << "plotFD: Rows = " <<invFd.rows << endl;
     for(int i = 0; i<invFd.rows;i++)
     {
-        //! @todo Plot white pixels in the image using contour points
+        img.at<Vec3b>(invFd.at<Vec2i>(0,i)[1], invFd.at<Vec2i>(0,i)[0]) = Vec3b(255,255,255);
     }
+    cout << 2;
+
+    namedWindow(win);
+    imshow(win,img);
+    waitKey(dur);
 
 }
 
