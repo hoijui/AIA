@@ -27,7 +27,7 @@ static const double dDetectionThreshold = 0.5; //could probably be 0.005
 static const int iImageDelay = 2000;
 
 void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k);
-Mat makeFD(Mat& matContour);
+Mat makeFD(const Mat& matContour);
 Mat normFD(Mat& fd, int n);
 void showImage(Mat& img, string win, double dur=-1);
 void plotFD(Mat& fd, string win, double dDuration=-1);
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
     // TODO
     //detThreshold = ???;
-    for (vector<Mat>::iterator c = vmatContourLinesResult.begin(); c != vmatContourLinesResult.end(); c++, i++)	{
+    for (vector<Mat>::const_iterator c = vmatContourLinesResult.begin(); c != vmatContourLinesResult.end(); c++, i++)	{
 
         cout << "Main: Checking object candidate no " << i << " :" << endl;
 
@@ -155,12 +155,10 @@ int main(int argc, char** argv) {
             col = Vec3b(0,255,0);
             cout << "Main: Class 1 ( " << err1 << " )" << endl;
         }
-        /*cout << "Main: " << endl << *c << endl;
         for (int i = 0; i < c->rows; i++)
         {
-            //cout << "Main: matResult.at<Vec3b>(" << c->at<Vec2i>(0,i)[1] << "," << c->at<Vec2i>(0,i)[0] << ") =..." << endl;
             matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = col;
-        }*/
+        }
         // for intermediate results, use the following line
         //showImage(matResult, "Current Object", iImageDelay);
     }
@@ -217,21 +215,22 @@ Mat normFD(Mat& matFD, int n)
  * @param contour  1xN 2-channel matrix, containing N points (x in first, y in second channel)
  * @return fourier descriptor (not normalized)
  */
-Mat makeFD(Mat& matContour)
+Mat makeFD(const Mat& matContour)
 {
+	Mat fMatContour = matContour.clone();
     if(matContour.type() == CV_32SC2) //if the input is only integer precision, convert
-        matContour.convertTo(matContour,CV_32FC2);
+        matContour.convertTo(fMatContour,CV_32FC2);
 
     Size outSize;
     outSize.width = 1;
     //outSize.height = getOptimalDFTSize(contour.rows - 1); //could be activated for faster processing
-    outSize.height = matContour.rows;
+    outSize.height = fMatContour.rows;
     Mat tempContour(outSize,
-                    matContour.type(), //when used with CV_32FC2, some assertion fails
+                    fMatContour.type(), //when used with CV_32FC2, some assertion fails
                     Scalar::all(0) //initialize with zeros
                     );
     //copy contour to tempcontour
-    tempContour = matContour.clone();
+    tempContour = fMatContour.clone();
 
     dft(tempContour,tempContour);
 
