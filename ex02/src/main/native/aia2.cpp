@@ -16,13 +16,15 @@ using namespace cv;
 
 // parameters
 //! Threshold for image binarization.
-static const int binThreshold = 90;
+static const int iBinThreshold = 90;
 //! Number of applications of the erosion operator.
-static const int numOfErosions = 1;
+static const int iNumOfErosions = 3;
 //! Number of dimensions in the FD.
-static const int steps = 34;
+static const int iFDNormDimensions = 32;
 //! Threshold for detection.
-static const double detThreshold = 0.5;
+static const double dDetectionThreshold = 0.5;
+//! Delay before program is resumed after image display.
+static const int iImageDelay = 2000;
 
 void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k);
 Mat makeFD(Mat& contour);
@@ -30,7 +32,7 @@ Mat normFD(Mat& fd, int n);
 void showImage(Mat& img, string win, double dur=-1);
 void plotFD(Mat& fd, string win, double dur=-1);
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 /**
  * main function, loads and saves image
@@ -50,102 +52,104 @@ int main(int argc, char** argv) {
     // process image data base
     // load image as gray-scale, paths in argv[2] and argv[3]
     cout << argv[2] << endl;
-    Mat exC1 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
-    Mat exC2  = imread(argv[3], CV_LOAD_IMAGE_GRAYSCALE );
-    if ((!exC1.data) || (!exC2.data)) {
+    Mat matExC1 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
+    Mat matExC2  = imread(argv[3], CV_LOAD_IMAGE_GRAYSCALE );
+    if ((!matExC1.data) || (!matExC2.data)) {
         cerr << "ERROR: Cannot load class examples in\n" << argv[2] << "\n" << argv[3] << endl;
         return -1;
     }
 
     // get contour line from images
-    vector<Mat> contourLines1;
-    vector<Mat> contourLines2;
+    vector<Mat> vmatContourLines1;
+    vector<Mat> vmatContourLines2;
 
-    getContourLine(exC1, contourLines1, binThreshold, numOfErosions);
-    getContourLine(exC2, contourLines2, binThreshold, numOfErosions);
+    getContourLine(matExC1, vmatContourLines1, iBinThreshold, iNumOfErosions);
+    getContourLine(matExC2, vmatContourLines2, iBinThreshold, iNumOfErosions);
 #if DEBUG_MODE
     //plot contour line
-    Mat testImage(exC1.rows, exC1.cols, CV_8UC3);
+    Mat matTestImage(matExC1.rows, matExC1.cols, CV_8UC3);
     vector<Mat> temp2;
-    temp2.push_back(exC1);
-    temp2.push_back(exC1);
-    temp2.push_back(exC1);
-    merge(temp2, testImage);
+    temp2.push_back(matExC1);
+    temp2.push_back(matExC1);
+    temp2.push_back(matExC1);
+    merge(temp2, matTestImage);
 
-    Mat cont = contourLines1.front();
-    cout << cont.at<Vec2i>(0,1)[1] << " " << cont.at<Vec2i>(0,1)[0] << endl;
+    Mat cont = vmatContourLines1.front();
+    //cout << cont.at<Vec2i>(0,1)[1] << " " << cont.at<Vec2i>(0,1)[0] << endl;
     for(int i = 0; i< cont.rows; i++)
     {
-        testImage.at<Vec3b>(cont.at<Vec2i>(0,i)[1], cont.at<Vec2i>(0,i)[0]) = Vec3b(0,0,255);
+        matTestImage.at<Vec3b>(cont.at<Vec2i>(0,i)[1], cont.at<Vec2i>(0,i)[0]) = Vec3b(0,0,255);
     }
 
-    namedWindow("TestWindow", CV_WINDOW_AUTOSIZE);
-    imshow("TestWindow",testImage);
-    waitKey(0);
+    namedWindow("Contour line 1", CV_WINDOW_AUTOSIZE);
+    imshow("Contour line 1",matTestImage);
+    waitKey(iImageDelay);
 #endif
 
 
     // calculate fourier descriptor
-    Mat fd1 = makeFD(contourLines1.front());
-    Mat fd2 = makeFD(contourLines2.front());
+    Mat matFD1 = makeFD(vmatContourLines1.front());
+    Mat matFD2 = makeFD(vmatContourLines2.front());
 
     // normalize  fourier descriptor
     // TODO
     //steps = ???;
-    Mat fd1_norm = normFD(fd1, steps);
-    Mat fd2_norm = normFD(fd2, steps);
+    plotFD(matFD1,"Fourier Descriptor Raw 1",iImageDelay);
 
-#if DEBUG_MODE
-    cout << "Main: " << endl << fd1_norm;
-    plotFD(fd1_norm,"Normalized fourier descriptor",0);
-#endif
+    Mat matFD1Norm = normFD(matFD1, iFDNormDimensions);
+    Mat matFD2Norm = normFD(matFD2, iFDNormDimensions);
+
 
     //plot the intermediate results
-    plotFD(fd1_norm,"Fourier Descriptor 1",0);
-    plotFD(fd2_norm,"Fourier Descriptor 2",0);
+    plotFD(matFD1Norm,"Fourier Descriptor 1",iImageDelay);
+    plotFD(matFD2Norm,"Fourier Descriptor 2",iImageDelay);
 
 
     // process query image
     // load image as gray-scale, path in argv[1]
-    Mat query = imread( argv[1], 0);
-    if (!query.data){
+    Mat matQuery = imread( argv[1], 0);
+    if (!matQuery.data){
         cerr << "ERROR: Cannot load query image in\n" << argv[1] << endl;
         return -1;
     }
 
     // get contour lines from image
-    vector<Mat> contourLines;
+    vector<Mat> vmatContourLinesResult;
     // TODO
     //binThreshold = ???;
     //numOfErosions = ???;
-    getContourLine(query, contourLines, binThreshold, numOfErosions);
+    getContourLine(matQuery, vmatContourLinesResult, iBinThreshold, iNumOfErosions);
 
-    cout << "Found " << contourLines.size() << " object candidates" << endl;
+    cout << "Found " << vmatContourLinesResult.size() << " object candidates" << endl;
 
     // just to visualize classification result
-    Mat result(query.rows, query.cols, CV_8UC3);
+    Mat matResult(matQuery.rows, matQuery.cols, CV_8UC3);
     vector<Mat> tmp;
-    tmp.push_back(query);
-    tmp.push_back(query);
-    tmp.push_back(query);
-    merge(tmp, result);
+    tmp.push_back(matQuery);
+    tmp.push_back(matQuery);
+    tmp.push_back(matQuery);
+    merge(tmp, matResult);
 
     // loop through all contours found
     int i=1;
+
+    cout << "Main: Resulting image dimensions are " << matResult.cols << " " << matResult.rows << endl;
+
+
     // TODO
     //detThreshold = ???;
-    for (vector<Mat>::iterator c = contourLines.begin(); c != contourLines.end(); c++, i++)	{
+    for (vector<Mat>::iterator c = vmatContourLinesResult.begin(); c != vmatContourLinesResult.end(); c++, i++)	{
 
-        cout << "Checking object candidate no " << i << " :\t";
+        cout << "Main: Checking object candidate no " << i << " :" << endl;
 
-        for (int i = 0; i < c->cols; i++) {
-            result.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = Vec3b(255,0,0);
+        for (int i = 0; i < c->rows; i++) {
+            matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = Vec3b(255,0,0);
         }
-        showImage(result, "Current Object", 0);
+        showImage(matResult, "Current Object", iImageDelay);
 
         // if fourier descriptor has too few components (too small contour), then skip it
-        if (c->cols < steps*2) {
-            cout << "Too less boundary points" << endl;
+        if (c->rows < iFDNormDimensions*2) {
+            cout << "Main: Too less boundary points: Min " << iFDNormDimensions*2 << " actual " << c->rows << endl;
             continue;
         }
 
@@ -153,15 +157,15 @@ int main(int argc, char** argv) {
         Mat fd = makeFD(*c);
 
         // normalize fourier descriptor
-        Mat fd_norm = normFD(fd, steps);
+        Mat fd_norm = normFD(fd, iFDNormDimensions);
 
         // compare fourier descriptors
-        double err1 = norm(fd_norm, fd1_norm) / steps;
-        double err2 = norm(fd_norm, fd2_norm) / steps;
+        double err1 = norm(fd_norm, matFD1Norm) / iFDNormDimensions;
+        double err2 = norm(fd_norm, matFD2Norm) / iFDNormDimensions;
 
         // if similarity is too small, then reject
-        if (min(err1, err2) > detThreshold){
-            cout << "No class instance ( " << min(err1, err2) << " )" << endl;
+        if (min(err1, err2) > dDetectionThreshold){
+            cout << "Main: No class instance ( " << min(err1, err2) << " )" << endl;
             continue;
         }
 
@@ -169,22 +173,24 @@ int main(int argc, char** argv) {
         Vec3b col;
         if (err1 > err2) {
             col = Vec3b(0,0,255);
-            cout << "Class 2 ( " << err2 << " )" << endl;
+            cout << "Main: Class 2 ( " << err2 << " )" << endl;
         } else {
             col = Vec3b(0,255,0);
-            cout << "Class 1 ( " << err1 << " )" << endl;
+            cout << "Main: Class 1 ( " << err1 << " )" << endl;
         }
-        for (int i = 0; i < c->cols; i++) {
-            result.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = col;
+        /*cout << "Main: " << endl << *c << endl;
+        for (int i = 0; i < c->rows; i++)
+        {
+            cout << "Main: matResult.at<Vec3b>(" << c->at<Vec2i>(0,i)[1] << "," << c->at<Vec2i>(0,i)[0] << ") =..." << endl;
+            matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = col;
         }
-
         // for intermediate results, use the following line
-        showImage(result, "Current Object", 0);
+        showImage(matResult, "Current Object", iImageDelay);*/
     }
     // save result
-    imwrite("result.png", result);
+    imwrite("result.png", matResult);
     // show final result
-    showImage(result, "Result", 0);
+    showImage(matResult, "Result", 0);
 
     return 0;
 }
@@ -206,7 +212,7 @@ Mat normFD(Mat& fd, int n)
     {
         //Range rowRange(0,n);
         Mat out(n,1,CV_32FC2);
-        float fScale = fd.at<Vec2f>(0,1)[0];
+        float fScale = sqrt(pow(fd.at<Vec2f>(0,1)[0],2)+pow(fd.at<Vec2f>(0,1)[1],2)); // magnitude of second element
 
         for(int i = 0; i < n/2; i++)
         {
@@ -214,8 +220,8 @@ Mat normFD(Mat& fd, int n)
 
             out.row(n-1-i) = fd.row(fd.rows-1-i) / fScale;
 
+
             out.at<Vec2f>(0,i)[0] = sqrt(pow(out.at<Vec2f>(0,i)[0],2) + pow(out.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
-                                                                                                       //carttopolar was not used, custom function written instead
             out.at<Vec2f>(0,i)[1] = 0;
 
             out.at<Vec2f>(0,n-1-i)[0] = sqrt(pow(out.at<Vec2f>(0,n-1-i)[0],2) + pow(out.at<Vec2f>(0,n-1-i)[1],2));
@@ -248,7 +254,7 @@ Mat makeFD(Mat& contour)
                     Scalar::all(0) //initialize with zeros
                     );
     //copy contour to tempcontour
-    contour.copyTo(tempContour);
+    tempContour = contour.clone();
 
     dft(tempContour,tempContour);
 
@@ -298,34 +304,43 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
 void plotFD(Mat& fd, string win, double dur)
 {
     Mat invFd;
+    float fMaxX = -HUGE_VAL; //later image dimensions
+    float fMaxY = -HUGE_VAL;
+    float fMinX = HUGE_VAL; //unscaled to correct negative coordinates
+    float fMinY = HUGE_VAL;
+    int iOffsetX, iOffsetY; //scaled and rounded offset
+
     invFd = fd.clone();
     dft(invFd,invFd,DFT_INVERSE | DFT_SCALE); //inverse dft
-    //invFd *= 100;
-    //invFd.convertTo(invFd,CV_32SC2);
-    //cout << invFd << endl;
 
-    float fMaxX = -HUGE_VAL;
-    float fMaxY = -HUGE_VAL;
-    for(int i = 0; i<invFd.rows;i++) //find maximum image dimensions
+    for(int i = 0; i<invFd.rows;i++) //find maximum and minimum image dimensions
     {
         fMaxX = max(invFd.at<Vec2f>(0,i)[0],fMaxX);
         fMaxY = max(invFd.at<Vec2f>(0,i)[1],fMaxY);
+        fMinX = min(invFd.at<Vec2f>(0,i)[0],fMinX);
+        fMinY = min(invFd.at<Vec2f>(0,i)[1],fMinY);
     }
 
-    float fMinimum = min(fMaxX,fMaxY);
-    invFd *= 100 / fMinimum;
+    float fScale =  100.0 / min(fMaxX,fMaxY); //maximum image dimension = 100px
+    cout << "plotFD: Scale factor is " << fScale << endl;
+    invFd *= fScale;
+
     invFd.convertTo(invFd,CV_32SC2);
+    iOffsetX = ceil(fMinX*fScale);
+    iOffsetY = ceil(fMinY*fScale);
+
 
     cout << "plotFD: " << fMaxX << " " << fMaxY << endl;
 
-    Mat img = Mat::zeros(fMaxY,fMaxX,CV_8UC3);
+    Mat img = Mat::zeros(ceil(fMaxY*fScale)-iOffsetY,ceil(fMaxX*fScale)-iOffsetX,CV_8UC3);
     //cout << "plotFD: Image type = " << fd.type() << " other types are " << CV_32FC2 << endl;
-    cout << "plotFD: Rows = " <<invFd.rows << endl;
+    cout << "plotFD: Offsets are (" << iOffsetX << " | " << iOffsetY << "), image dimensions are (" << ceil(fMaxX*fScale)-iOffsetX << " | " << ceil(fMaxY*fScale)-iOffsetY << ")" << endl;
     for(int i = 0; i<invFd.rows;i++)
     {
-        img.at<Vec3b>(invFd.at<Vec2i>(0,i)[1], invFd.at<Vec2i>(0,i)[0]) = Vec3b(255,255,255);
+        //we still may have negative coordiates at this point as we centered our contour around (0,0) --> use the offset
+        cout << "plotFD: Current point is (" << invFd.at<Vec2i>(0,i)[0] << " - " << iOffsetX << " | " << invFd.at<Vec2i>(0,i)[1] << " - " << iOffsetY << ")" << endl;
+        img.at<Vec3b>(invFd.at<Vec2i>(0,i)[1] - iOffsetY, invFd.at<Vec2i>(0,i)[0] - iOffsetX) = Vec3b(255,255,255);
     }
-    cout << 2;
 
     namedWindow(win);
     imshow(win,img);
