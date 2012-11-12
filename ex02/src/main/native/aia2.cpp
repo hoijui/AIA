@@ -18,19 +18,19 @@ using namespace cv;
 //! Threshold for image binarization.
 static const int iBinThreshold = 90;
 //! Number of applications of the erosion operator.
-static const int iNumOfErosions = 3;
+static const int iNumOfErosions = 1;
 //! Number of dimensions in the FD.
 static const int iFDNormDimensions = 32;
 //! Threshold for detection.
-static const double dDetectionThreshold = 0.5;
+static const double dDetectionThreshold = 0.5; //could probably be 0.005
 //! Delay before program is resumed after image display.
 static const int iImageDelay = 2000;
 
-void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k);
-Mat makeFD(Mat& contour);
+void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k);
+Mat makeFD(Mat& matContour);
 Mat normFD(Mat& fd, int n);
 void showImage(Mat& img, string win, double dur=-1);
-void plotFD(Mat& fd, string win, double dur=-1);
+void plotFD(Mat& fd, string win, double dDuration=-1);
 
 #define DEBUG_MODE 0
 
@@ -65,44 +65,21 @@ int main(int argc, char** argv) {
 
     getContourLine(matExC1, vmatContourLines1, iBinThreshold, iNumOfErosions);
     getContourLine(matExC2, vmatContourLines2, iBinThreshold, iNumOfErosions);
-#if DEBUG_MODE
-    //plot contour line
-    Mat matTestImage(matExC1.rows, matExC1.cols, CV_8UC3);
-    vector<Mat> temp2;
-    temp2.push_back(matExC1);
-    temp2.push_back(matExC1);
-    temp2.push_back(matExC1);
-    merge(temp2, matTestImage);
-
-    Mat cont = vmatContourLines1.front();
-    //cout << cont.at<Vec2i>(0,1)[1] << " " << cont.at<Vec2i>(0,1)[0] << endl;
-    for(int i = 0; i< cont.rows; i++)
-    {
-        matTestImage.at<Vec3b>(cont.at<Vec2i>(0,i)[1], cont.at<Vec2i>(0,i)[0]) = Vec3b(0,0,255);
-    }
-
-    namedWindow("Contour line 1", CV_WINDOW_AUTOSIZE);
-    imshow("Contour line 1",matTestImage);
-    waitKey(iImageDelay);
-#endif
-
 
     // calculate fourier descriptor
     Mat matFD1 = makeFD(vmatContourLines1.front());
     Mat matFD2 = makeFD(vmatContourLines2.front());
 
-    // normalize  fourier descriptor
-    // TODO
-    //steps = ???;
     plotFD(matFD1,"Fourier Descriptor Raw 1",iImageDelay);
 
+    // normalize  fourier descriptor
     Mat matFD1Norm = normFD(matFD1, iFDNormDimensions);
     Mat matFD2Norm = normFD(matFD2, iFDNormDimensions);
 
 
     //plot the intermediate results
     plotFD(matFD1Norm,"Fourier Descriptor 1",iImageDelay);
-    plotFD(matFD2Norm,"Fourier Descriptor 2",iImageDelay);
+    //plotFD(matFD2Norm,"Fourier Descriptor 2",iImageDelay);
 
 
     // process query image
@@ -115,9 +92,6 @@ int main(int argc, char** argv) {
 
     // get contour lines from image
     vector<Mat> vmatContourLinesResult;
-    // TODO
-    //binThreshold = ???;
-    //numOfErosions = ???;
     getContourLine(matQuery, vmatContourLinesResult, iBinThreshold, iNumOfErosions);
 
     cout << "Found " << vmatContourLinesResult.size() << " object candidates" << endl;
@@ -142,13 +116,15 @@ int main(int argc, char** argv) {
 
         cout << "Main: Checking object candidate no " << i << " :" << endl;
 
-        for (int i = 0; i < c->rows; i++) {
+        for (int i = 0; i < c->rows; i++)
+        {
             matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = Vec3b(255,0,0);
         }
         showImage(matResult, "Current Object", iImageDelay);
 
         // if fourier descriptor has too few components (too small contour), then skip it
-        if (c->rows < iFDNormDimensions*2) {
+        if (c->rows < iFDNormDimensions*2)
+        {
             cout << "Main: Too less boundary points: Min " << iFDNormDimensions*2 << " actual " << c->rows << endl;
             continue;
         }
@@ -164,7 +140,8 @@ int main(int argc, char** argv) {
         double err2 = norm(fd_norm, matFD2Norm) / iFDNormDimensions;
 
         // if similarity is too small, then reject
-        if (min(err1, err2) > dDetectionThreshold){
+        if (min(err1, err2) > dDetectionThreshold)
+        {
             cout << "Main: No class instance ( " << min(err1, err2) << " )" << endl;
             continue;
         }
@@ -181,11 +158,11 @@ int main(int argc, char** argv) {
         /*cout << "Main: " << endl << *c << endl;
         for (int i = 0; i < c->rows; i++)
         {
-            cout << "Main: matResult.at<Vec3b>(" << c->at<Vec2i>(0,i)[1] << "," << c->at<Vec2i>(0,i)[0] << ") =..." << endl;
+            //cout << "Main: matResult.at<Vec3b>(" << c->at<Vec2i>(0,i)[1] << "," << c->at<Vec2i>(0,i)[0] << ") =..." << endl;
             matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = col;
-        }
+        }*/
         // for intermediate results, use the following line
-        showImage(matResult, "Current Object", iImageDelay);*/
+        //showImage(matResult, "Current Object", iImageDelay);
     }
     // save result
     imwrite("result.png", matResult);
@@ -201,37 +178,37 @@ int main(int argc, char** argv) {
  * @param n  number of used frequencies (should be even)
  * @return the normalized fourier descriptor
  */
-Mat normFD(Mat& fd, int n)
+Mat normFD(Mat& matFD, int n)
 {
     if(n % 2 != 0)
     {
         cerr << "normFD: Used frequencies must be even, is " << n << "." << endl;
-        return fd;
+        return matFD;
     }
     else
     {
         //Range rowRange(0,n);
-        Mat out(n,1,CV_32FC2);
-        float fScale = sqrt(pow(fd.at<Vec2f>(0,1)[0],2)+pow(fd.at<Vec2f>(0,1)[1],2)); // magnitude of second element
+        Mat matOut(n,1,CV_32FC2);
+        float fScale = sqrt(pow(matFD.at<Vec2f>(0,1)[0],2)+pow(matFD.at<Vec2f>(0,1)[1],2)); // magnitude of second element
 
         for(int i = 0; i < n/2; i++)
         {
-            out.row(i) = fd.row(i) / fScale;
+            matOut.row(i) = matFD.row(i) / fScale;
 
-            out.row(n-1-i) = fd.row(fd.rows-1-i) / fScale;
+            matOut.row(n-1-i) = matFD.row(matFD.rows-1-i) / fScale;
 
 
-            out.at<Vec2f>(0,i)[0] = sqrt(pow(out.at<Vec2f>(0,i)[0],2) + pow(out.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
-            out.at<Vec2f>(0,i)[1] = 0;
+            matOut.at<Vec2f>(0,i)[0] = sqrt(pow(matOut.at<Vec2f>(0,i)[0],2) + pow(matOut.at<Vec2f>(0,i)[1],2)); //rotation invariance -> delete phase information
+            matOut.at<Vec2f>(0,i)[1] = 0;
 
-            out.at<Vec2f>(0,n-1-i)[0] = sqrt(pow(out.at<Vec2f>(0,n-1-i)[0],2) + pow(out.at<Vec2f>(0,n-1-i)[1],2));
-            out.at<Vec2f>(0,n-1-i)[1] = 0;
+            matOut.at<Vec2f>(0,n-1-i)[0] = sqrt(pow(matOut.at<Vec2f>(0,n-1-i)[0],2) + pow(matOut.at<Vec2f>(0,n-1-i)[1],2));
+            matOut.at<Vec2f>(0,n-1-i)[1] = 0;
         }
-        out.at<Vec2f>(0,0)[0] = 0;
+        matOut.at<Vec2f>(0,0)[0] = 0;
         //translation invariance -> first element to 0
         //ignore high frequencies -> delete middle elemenents of vector so that only first and last n/2 elements remain
         //scale invariance -> divide all elements by 2nd element
-        return out;
+        return matOut;
     }
 }
 
@@ -240,21 +217,21 @@ Mat normFD(Mat& fd, int n)
  * @param contour  1xN 2-channel matrix, containing N points (x in first, y in second channel)
  * @return fourier descriptor (not normalized)
  */
-Mat makeFD(Mat& contour)
+Mat makeFD(Mat& matContour)
 {
-    if(contour.type() == CV_32SC2) //if the input is only integer precision, convert
-        contour.convertTo(contour,CV_32FC2);
+    if(matContour.type() == CV_32SC2) //if the input is only integer precision, convert
+        matContour.convertTo(matContour,CV_32FC2);
 
     Size outSize;
     outSize.width = 1;
     //outSize.height = getOptimalDFTSize(contour.rows - 1); //could be activated for faster processing
-    outSize.height = contour.rows;
+    outSize.height = matContour.rows;
     Mat tempContour(outSize,
-                    contour.type(), //when used with CV_32FC2, some assertion fails
+                    matContour.type(), //when used with CV_32FC2, some assertion fails
                     Scalar::all(0) //initialize with zeros
                     );
     //copy contour to tempcontour
-    tempContour = contour.clone();
+    tempContour = matContour.clone();
 
     dft(tempContour,tempContour);
 
@@ -268,15 +245,15 @@ Mat makeFD(Mat& contour)
  * @param thresh  threshold used to binarize the image
  * @param k  number of applications of the erosion operator
  */
-void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
+void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k)
 {
     //image preparation
-    threshold(img,img,thresh,
+    threshold(matImg,matImg,iThresh,
               255, //set all points meeting the threshold to 255
               THRESH_BINARY //output is a binary image
               );
 
-    erode(img,img,
+    erode(matImg,matImg,
           Mat(), //Mat() leads to a 3x3 square kernel
           Point(-1,-1), //upper corner
           k);
@@ -287,9 +264,9 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
 
     //copy image as it is altered by findContours(..)
     Mat imageCopy;
-    imageCopy = img.clone();
+    imageCopy = matImg.clone();
 
-    findContours(imageCopy,objList,
+    findContours(imageCopy,vmatObjList,
                  CV_RETR_LIST , //only outer contours
                  CV_CHAIN_APPROX_NONE //no approximation
                  );
@@ -301,50 +278,48 @@ void getContourLine(Mat& img, vector<Mat>& objList, int thresh, int k)
  * @param win  the window name
  * @param dur  wait number of ms or until key is pressed
  */
-void plotFD(Mat& fd, string win, double dur)
+void plotFD(Mat& matFD, string szWindowName, double dDuration)
 {
-    Mat invFd;
+    Mat matInvFD;
     float fMaxX = -HUGE_VAL; //later image dimensions
     float fMaxY = -HUGE_VAL;
-    float fMinX = HUGE_VAL; //unscaled to correct negative coordinates
-    float fMinY = HUGE_VAL;
-    int iOffsetX, iOffsetY; //scaled and rounded offset
+    int iOffsetX = 0; //scaled and rounded offset
+    int iOffsetY = 0;
 
-    invFd = fd.clone();
-    dft(invFd,invFd,DFT_INVERSE | DFT_SCALE); //inverse dft
+    matInvFD = matFD.clone();
+    dft(matInvFD,matInvFD,DFT_INVERSE | DFT_SCALE); //inverse dft
 
-    for(int i = 0; i<invFd.rows;i++) //find maximum and minimum image dimensions
+    for(int i = 0; i<matInvFD.rows;i++) //find maximum and minimum image dimensions
     {
-        fMaxX = max(invFd.at<Vec2f>(0,i)[0],fMaxX);
-        fMaxY = max(invFd.at<Vec2f>(0,i)[1],fMaxY);
-        fMinX = min(invFd.at<Vec2f>(0,i)[0],fMinX);
-        fMinY = min(invFd.at<Vec2f>(0,i)[1],fMinY);
+        fMaxX = max(matInvFD.at<Vec2f>(0,i)[0],fMaxX);
+        fMaxY = max(matInvFD.at<Vec2f>(0,i)[1],fMaxY);
     }
 
     float fScale =  100.0 / min(fMaxX,fMaxY); //maximum image dimension = 100px
     cout << "plotFD: Scale factor is " << fScale << endl;
-    invFd *= fScale;
+    matInvFD *= fScale;
 
-    invFd.convertTo(invFd,CV_32SC2);
-    iOffsetX = ceil(fMinX*fScale);
-    iOffsetY = ceil(fMinY*fScale);
+    matInvFD.convertTo(matInvFD,CV_32SC2);
 
-
-    cout << "plotFD: " << fMaxX << " " << fMaxY << endl;
+    for(int i = 0; i<matInvFD.rows;i++) //find maximum and minimum image dimensions
+    {
+        iOffsetX = min(matInvFD.at<Vec2i>(0,i)[0],iOffsetX);
+        iOffsetY = min(matInvFD.at<Vec2i>(0,i)[1],iOffsetY);
+    }
 
     Mat img = Mat::zeros(ceil(fMaxY*fScale)-iOffsetY,ceil(fMaxX*fScale)-iOffsetX,CV_8UC3);
     //cout << "plotFD: Image type = " << fd.type() << " other types are " << CV_32FC2 << endl;
     cout << "plotFD: Offsets are (" << iOffsetX << " | " << iOffsetY << "), image dimensions are (" << ceil(fMaxX*fScale)-iOffsetX << " | " << ceil(fMaxY*fScale)-iOffsetY << ")" << endl;
-    for(int i = 0; i<invFd.rows;i++)
+    for(int i = 0; i<matInvFD.rows;i++)
     {
         //we still may have negative coordiates at this point as we centered our contour around (0,0) --> use the offset
-        cout << "plotFD: Current point is (" << invFd.at<Vec2i>(0,i)[0] << " - " << iOffsetX << " | " << invFd.at<Vec2i>(0,i)[1] << " - " << iOffsetY << ")" << endl;
-        img.at<Vec3b>(invFd.at<Vec2i>(0,i)[1] - iOffsetY, invFd.at<Vec2i>(0,i)[0] - iOffsetX) = Vec3b(255,255,255);
+        //cout << "plotFD: Current point is (" << invFd.at<Vec2i>(0,i)[0] << " - " << iOffsetX << " | " << invFd.at<Vec2i>(0,i)[1] << " - " << iOffsetY << ")" << endl;
+        img.at<Vec3b>(matInvFD.at<Vec2i>(0,i)[1] - iOffsetY, matInvFD.at<Vec2i>(0,i)[0] - iOffsetX) = Vec3b(255,255,255);
     }
 
-    namedWindow(win);
-    imshow(win,img);
-    waitKey(dur);
+    namedWindow(szWindowName);
+    imshow(szWindowName,img);
+    waitKey(dDuration);
 
 }
 
