@@ -16,22 +16,23 @@ using namespace cv;
 
 // parameters
 //! Threshold for image binarization.
-static const int iBinThreshold = 90;
+static const int iBinThreshold = 98;
 //! Number of applications of the erosion operator.
-static const int iNumOfErosions = 1;
+static const int iNumOfErosions = 2;
 //! Number of dimensions in the FD.
-static const int iFDNormDimensions = 32;
+static const int iFDNormDimensions = 64;
 //! Threshold for detection.
-static const double dDetectionThreshold = 0.5; //could probably be 0.005
+static const double dDetectionThreshold = 0.005; //could probably be 0.005
 //! Delay before program is resumed after image display.
-static const int iImageDelay = 2000;
+static const int iImageDelay = 50;
 
-void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k);
+void getContourLine(const Mat& matImg, vector<Mat>& vmatObjList, const int &iThresh, const int &k);
 Mat makeFD(const Mat& matContour);
-Mat normFD(Mat& fd, int n);
+Mat normFD(Mat& fd, const int &n);
 void showImage(Mat& img, string win, double dur=-1);
-void plotFD(Mat& fd, string win, double dDuration=-1);
+void plotFD(const Mat &fd, const string &win, const double &dDuration=-1);
 
+//! Print out more information about what is going on currently.
 #define DEBUG_MODE 0
 
 /**
@@ -41,10 +42,13 @@ void plotFD(Mat& fd, string win, double dDuration=-1);
  * argv[2] example image for class 1
  * argv[3] example image for class 2
  */
-int main(int argc, char** argv) {
+int main(int argc,
+         char** argv)
+{
 
     // check if image paths were defined
-    if (argc != 4) {
+    if (argc != 4)
+    {
         cerr << "Usage: aia2 <input image>  <class 1 example>  <class 2 example>" << endl;
         return -1;
     }
@@ -54,7 +58,8 @@ int main(int argc, char** argv) {
     cout << argv[2] << endl;
     Mat matExC1 = imread(argv[2], CV_LOAD_IMAGE_GRAYSCALE );
     Mat matExC2  = imread(argv[3], CV_LOAD_IMAGE_GRAYSCALE );
-    if ((!matExC1.data) || (!matExC2.data)) {
+    if ((!matExC1.data) || (!matExC2.data))
+    {
         cerr << "ERROR: Cannot load class examples in\n" << argv[2] << "\n" << argv[3] << endl;
         return -1;
     }
@@ -85,7 +90,8 @@ int main(int argc, char** argv) {
     // process query image
     // load image as gray-scale, path in argv[1]
     Mat matQuery = imread( argv[1], 0);
-    if (!matQuery.data){
+    if (!matQuery.data)
+    {
         cerr << "ERROR: Cannot load query image in\n" << argv[1] << endl;
         return -1;
     }
@@ -106,14 +112,12 @@ int main(int argc, char** argv) {
 
     // loop through all contours found
     int i=1;
-
+#if DEBUG_MODE
     cout << "Main: Resulting image dimensions are " << matResult.cols << " " << matResult.rows << endl;
+#endif
 
-
-    // TODO
-    //detThreshold = ???;
-    for (vector<Mat>::const_iterator c = vmatContourLinesResult.begin(); c != vmatContourLinesResult.end(); c++, i++)	{
-
+    for (vector<Mat>::const_iterator c = vmatContourLinesResult.begin(); c != vmatContourLinesResult.end(); c++, i++)
+    {
         cout << "Main: Checking object candidate no " << i << " :" << endl;
 
         for (int i = 0; i < c->rows; i++)
@@ -123,9 +127,9 @@ int main(int argc, char** argv) {
         showImage(matResult, "Current Object", iImageDelay);
 
         // if fourier descriptor has too few components (too small contour), then skip it
-        if (c->rows < iFDNormDimensions*2)
+        if (c->rows < iFDNormDimensions)
         {
-            cout << "Main: Too less boundary points: Min " << iFDNormDimensions*2 << " actual " << c->rows << endl;
+            cout << "Main: Too less boundary points: Min " << iFDNormDimensions << " actual " << c->rows << endl;
             continue;
         }
 
@@ -160,7 +164,9 @@ int main(int argc, char** argv) {
             matResult.at<Vec3b>(c->at<Vec2i>(0,i)[1], c->at<Vec2i>(0,i)[0]) = col;
         }
         // for intermediate results, use the following line
-        //showImage(matResult, "Current Object", iImageDelay);
+#if DEBUG_MODE
+        showImage(matResult, "Current Object", iImageDelay);
+#endif
     }
     // save result
     imwrite("result.png", matResult);
@@ -176,7 +182,8 @@ int main(int argc, char** argv) {
  * @param n  number of used frequencies (should be even)
  * @return the normalized fourier descriptor
  */
-Mat normFD(Mat& matFD, int n)
+Mat normFD(Mat& matFD,
+           const int &n)
 {
     if(n % 2 != 0)
     {
@@ -217,7 +224,7 @@ Mat normFD(Mat& matFD, int n)
  */
 Mat makeFD(const Mat& matContour)
 {
-	Mat fMatContour = matContour.clone();
+    Mat fMatContour = matContour.clone();
     if(matContour.type() == CV_32SC2) //if the input is only integer precision, convert
         matContour.convertTo(fMatContour,CV_32FC2);
 
@@ -244,7 +251,10 @@ Mat makeFD(const Mat& matContour)
  * @param thresh  threshold used to binarize the image
  * @param k  number of applications of the erosion operator
  */
-void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k)
+void getContourLine(const Mat& matImg,
+                    vector<Mat>& vmatObjList,
+                    const int &iThresh,
+                    const int &k)
 {
     //image preparation
     threshold(matImg,matImg,iThresh,
@@ -252,10 +262,17 @@ void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k)
               THRESH_BINARY //output is a binary image
               );
 
+    //perform closing --> dilate first, then erode
+    dilate(matImg,matImg,
+           Mat(), //3x3 square kernel
+           Point(-1,-1), //upper left corner
+           1);
+
     erode(matImg,matImg,
           Mat(), //Mat() leads to a 3x3 square kernel
           Point(-1,-1), //upper corner
           k);
+
 
     /*namedWindow("test", CV_WINDOW_AUTOSIZE);
     imshow("test", img);
@@ -277,7 +294,9 @@ void getContourLine(Mat& matImg, vector<Mat>& vmatObjList, int iThresh, int k)
  * @param win  the window name
  * @param dur  wait number of ms or until key is pressed
  */
-void plotFD(Mat& matFD, string szWindowName, double dDuration)
+void plotFD(const Mat& matFD,
+            const string &szWindowName,
+            const double &dDuration)
 {
     Mat matInvFD;
     float fMaxX = -HUGE_VAL; //later image dimensions
@@ -307,12 +326,12 @@ void plotFD(Mat& matFD, string szWindowName, double dDuration)
     }
 
     Mat img = Mat::zeros(ceil(fMaxY*fScale)-iOffsetY,ceil(fMaxX*fScale)-iOffsetX,CV_8UC3);
-    //cout << "plotFD: Image type = " << fd.type() << " other types are " << CV_32FC2 << endl;
+#if DEBUG_MODE
     cout << "plotFD: Offsets are (" << iOffsetX << " | " << iOffsetY << "), image dimensions are (" << ceil(fMaxX*fScale)-iOffsetX << " | " << ceil(fMaxY*fScale)-iOffsetY << ")" << endl;
+#endif
     for(int i = 0; i<matInvFD.rows;i++)
     {
         //we still may have negative coordiates at this point as we centered our contour around (0,0) --> use the offset
-        //cout << "plotFD: Current point is (" << invFd.at<Vec2i>(0,i)[0] << " - " << iOffsetX << " | " << invFd.at<Vec2i>(0,i)[1] << " - " << iOffsetY << ")" << endl;
         img.at<Vec3b>(matInvFD.at<Vec2i>(0,i)[1] - iOffsetY, matInvFD.at<Vec2i>(0,i)[0] - iOffsetX) = Vec3b(255,255,255);
     }
 
@@ -328,18 +347,23 @@ void plotFD(Mat& matFD, string szWindowName, double dDuration)
  * @param win	the window name
  * @param dur	wait number of ms or until key is pressed
  */
-void showImage(Mat& img, string win, double dur) {
+void showImage(Mat& img,
+               string win,
+               double dur)
+{
 
     // use copy for normalization
     Mat tempDisplay = img.clone();
-    if (img.channels() == 1) {
+    if (img.channels() == 1)
+    {
         normalize(img, tempDisplay, 0, 255, CV_MINMAX);
     }
     // create window and display omage
     namedWindow(win.c_str(), CV_WINDOW_AUTOSIZE);
     imshow(win.c_str(), tempDisplay);
     // wait
-    if (dur >= 0) {
+    if (dur >= 0)
+    {
         waitKey(dur);
     }
 }
