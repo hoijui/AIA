@@ -256,31 +256,29 @@ void getContourLine(const Mat& matImg,
                     const int &iThresh,
                     const int &k)
 {
+    // copy image as the following methods altered it
+    Mat imageCopy = matImg.clone();
+
     //image preparation
-    threshold(matImg,matImg,iThresh,
+    threshold(imageCopy,imageCopy,iThresh,
               255, //set all points meeting the threshold to 255
               THRESH_BINARY //output is a binary image
               );
 
     //perform closing --> dilate first, then erode
-    dilate(matImg,matImg,
+    dilate(imageCopy,imageCopy,
            Mat(), //3x3 square kernel
            Point(-1,-1), //upper left corner
            1);
 
-    erode(matImg,matImg,
+    erode(imageCopy,imageCopy,
           Mat(), //Mat() leads to a 3x3 square kernel
           Point(-1,-1), //upper corner
           k);
 
-
     /*namedWindow("test", CV_WINDOW_AUTOSIZE);
     imshow("test", img);
     waitKey(0);*/
-
-    //copy image as it is altered by findContours(..)
-    Mat imageCopy;
-    imageCopy = matImg.clone();
 
     findContours(imageCopy,vmatObjList,
                  CV_RETR_LIST , //only outer contours
