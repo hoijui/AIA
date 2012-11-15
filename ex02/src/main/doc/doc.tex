@@ -16,7 +16,7 @@
 \setlength{\parskip}{10pt plus 1pt minus 1pt}
 
 \title{Automatic Image Analysis - WS12/13 \\ Excercise 2 \\ \emph{Search, Seek and Categorize Images with OpenCV}}
-\author{Team e: Marcus Grum, Robin Vobruba, Robert Koppisch, Nicolas Brieger}
+\author{Team e: Marcus Grum (340733), Robin Vobruba (343773), \\ Robert Koppisch (214168), Nicolas Brieger (318599)}
 \date{\today}
 
 \pdfinfo{%
@@ -45,10 +45,10 @@
 		\label{fig:#1}
 	\end{figure}
 }
-\newcommand{\iBinThreshold}{110}
-\newcommand{\iNumOfErosions}{1}
+\newcommand{\iBinThreshold}{98}
+\newcommand{\iNumOfErosions}{2}
 \newcommand{\dDetectionThreshold}{0.005}
-\newcommand{\iFDNormDimensions}{32}
+\newcommand{\iFDNormDimensions}{64} %128/2
 
 \begin{document}
 
@@ -89,26 +89,26 @@ In our implementation, they have been loaded in greyscale.
 \image{../../../target/pic_db2}{0.5}{%
 		Training picture 2 (\emph{has to be classified}).}
 
-As a kind of preparation step, the training images have to be segmented such that the 
-function can extract the form of the objects properly.
+As a kind of preparation step, the training images have to be segmented such that in 
+further processing steps the form of the objects can be extracted properly.
 For this purpose, we use the function threshold(...) and a threshold of \iBinThreshold{} to binarize the images.
 Then, the function erode(...) deletes small object connections like e.g. between the leaves.
 For this, a threshold of \iNumOfErosions{} will be used.
 Now, the contours can be extracted.
 
 Representing the raw contour, the images looks like in fig. \ref{fig:../../../target/pic_RawFourierDescriptor1} 
-and in in fig. \ref{fig:../../../target/pic_RawFourierDescriptor2}.
+and in fig. \ref{fig:../../../target/pic_RawFourierDescriptor2}.
 
 \image{../../../target/pic_RawFourierDescriptor1}{0.2}{%
 		Raw picture 1 (\emph{contour with all frequencies}).}
 \image{../../../target/pic_RawFourierDescriptor2}{0.5}{%
 		Raw picture 2 (\emph{contour with all frequencies}).}
 
-The function $f$ stands for the contours of the object,
-which are represented with help of vectors of pixel locations, represented as complex numbers.
-Those are extracted from both, the original image and the training images.
-In order to reach an efficient, precise and robust representation of the function $f$, 
-it will be represented and simplified with help of Fourier Descriptors as it is described in the following:
+
+The function $f$ stands for the contours of the object.
+The contours of the object are represented as a vector of points, extracted from the training
+images aswell as the original one. In order to reach an efficient, precise and robust representation of the contour, 
+it will be represented with help of Fourier Descriptors. The fourier descriptor then is normalized as follows:
 
 \begin{itemize}
 \item Force translation invariance: The first element of the frequency vectors is set to 0.
@@ -118,18 +118,18 @@ it will be represented and simplified with help of Fourier Descriptors as it is 
 In our implementation, we kept the \iFDNormDimensions{} low frequency components, while the rest was set to 0.
 \end{itemize}
 
-Due to the grace of the Fourier Descriptors and the mentioned modifications, 
+Thanks to the Fourier Descriptors and the mentioned modifications, 
 the recognition algorithm is invariant to object translations,
 rotations and scales.
 
 Representing a contour using the DFT, the image looks like in fig. \ref{fig:../../../target/pic_FourierDescriptor1} 
-and in in fig. \ref{fig:../../../target/pic_FourierDescriptor2}.
+and in fig. \ref{fig:../../../target/pic_FourierDescriptor2}.
 
 \image{../../../target/pic_FourierDescriptor1}{0.3}{%
 		Reconstructed picture 1 (\emph{contours with reduced frequencies}).}
 \image{../../../target/pic_FourierDescriptor2}{0.5}{%
 		Reconstructed picture 2 (\emph{contours with reduced frequencies}).}
-
+\newpage
 The final picture can be seen in fig. \ref{fig:../../../target/pic_final}.
 Due to the fact that we have implemented a live search engine,
 objects that are currently analysed are marked in blue.
@@ -139,12 +139,12 @@ The first type of leaf has been colored in red
 and the second one has been colored in green.
 If it was not categorized, the blue colore is kept to show that the object was considered.
 
-\image{../../../target/pic_final}{1}{%
+\image{../../../target/pic_final}{0.9}{%
 		Original picture (\emph{with classified objects}).} 
 
 Here can be seen, that the implementation of our algorithm works quite well.
 The two types of leaves have been classified correctly.
-
+\newpage
 \section{Optional}
 
 \subsection{What kind of problems do you encounter?}
