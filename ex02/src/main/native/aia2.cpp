@@ -237,12 +237,10 @@ Mat makeFD(const Mat& matContour)
                     fMatContour.type(), //when used with CV_32FC2, some assertion fails
                     Scalar::all(0) //initialize with zeros
                     );
-    //copy contour to tempcontour
-    tempContour = fMatContour.clone();
 
-    dft(tempContour,tempContour);
+    dft(fMatContour,fMatContour);
 
-    return tempContour;
+    return fMatContour;
 }
 
 /**
