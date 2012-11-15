@@ -20,11 +20,11 @@ static const int iBinThreshold = 98;
 //! Number of applications of the erosion operator.
 static const int iNumOfErosions = 2;
 //! Number of dimensions in the FD.
-static const int iFDNormDimensions = 64;
+static const int iFDNormDimensions = 128;
 //! Threshold for detection.
-static const double dDetectionThreshold = 0.005; //could probably be 0.005
+static const double dDetectionThreshold = 0.005;
 //! Delay before program is resumed after image display.
-static const int iImageDelay = 50;
+static const int iImageDelay = 0;
 
 void getContourLine(const Mat& matImg, vector<Mat>& vmatObjList, const int &iThresh, const int &k);
 Mat makeFD(const Mat& matContour);
@@ -75,7 +75,8 @@ int main(int argc,
     Mat matFD1 = makeFD(vmatContourLines1.front());
     Mat matFD2 = makeFD(vmatContourLines2.front());
 
-    plotFD(matFD1,"Fourier Descriptor Raw 1",iImageDelay);
+    plotFD(matFD1,"pic_RawFourierDescriptor1.png",iImageDelay);
+    plotFD(matFD2,"pic_RawFourierDescriptor2.png",iImageDelay);
 
     // normalize  fourier descriptor
     Mat matFD1Norm = normFD(matFD1, iFDNormDimensions);
@@ -83,8 +84,8 @@ int main(int argc,
 
 
     //plot the intermediate results
-    plotFD(matFD1Norm,"Fourier Descriptor 1",iImageDelay);
-    //plotFD(matFD2Norm,"Fourier Descriptor 2",iImageDelay);
+    plotFD(matFD1Norm,"pic_FourierDescriptor1.png",iImageDelay);
+    plotFD(matFD2Norm,"pic_FourierDescriptor2.png",iImageDelay);
 
 
     // process query image
@@ -169,7 +170,7 @@ int main(int argc,
 #endif
     }
     // save result
-    imwrite("result.png", matResult);
+    imwrite("pic_final.png", matResult);
     // show final result
     showImage(matResult, "Result", 0);
 
@@ -335,6 +336,7 @@ void plotFD(const Mat& matFD,
 
     namedWindow(szWindowName);
     imshow(szWindowName,img);
+    imwrite(szWindowName,img);
     waitKey(dDuration);
 
 }
