@@ -45,6 +45,9 @@
 		\label{fig:#1}
 	\end{figure}
 }
+
+\newcommand{\generatedImgRoot}{../../../target}
+
 \newcommand{\iBinThreshold}{98}
 \newcommand{\iNumOfErosions}{2}
 \newcommand{\dDetectionThreshold}{0.005}
@@ -73,20 +76,20 @@ It will be used for the object detection based on a functional comparison of two
 The \emph{original} image containing the set of unclassified objects 
 and the \emph{training} images that contain the objects to be classified separately.
 
-The original picture that shall be analysed could be seen in fig. \ref{fig:../../../target/pic_input}.
+The original picture that shall be analysed could be seen in fig. \ref{fig:\generatedImgRoot/pic_input}.
 
-\image{../../../target/pic_input}{1}{%
+\image{\generatedImgRoot/pic_input}{1}{%
 		Original picture (\emph{with unclassified objects}).}
 
-The pictures of the database can be seen in fig. \ref{fig:../../../target/pic_db1}.
-and fig. \ref{fig:../../../target/pic_db2}. Two types of leaves are to be
+The pictures of the database can be seen in fig. \ref{fig:\generatedImgRoot/pic_db1}.
+and fig. \ref{fig:\generatedImgRoot/pic_db2}. Two types of leaves are to be
 recognized and classified. The \emph{training} images are stored in an image database. 
 This database can be seen as knowledge representation of the computer. 
 In our implementation, they have been loaded in greyscale.
 
-\image{../../../target/pic_db1}{0.2}{%
+\image{\generatedImgRoot/pic_db1}{0.2}{%
 		Training picture 1 (\emph{has to be classified}).}
-\image{../../../target/pic_db2}{0.5}{%
+\image{\generatedImgRoot/pic_db2}{0.5}{%
 		Training picture 2 (\emph{has to be classified}).}
 
 As a kind of preparation step, the training images have to be segmented such that in 
@@ -96,12 +99,12 @@ Then, the function erode(...) deletes small object connections like e.g. between
 For this, a threshold of \iNumOfErosions{} will be used.
 Now, the contours can be extracted.
 
-Representing the raw contour, the images looks like in fig. \ref{fig:../../../target/pic_RawFourierDescriptor1} 
-and in fig. \ref{fig:../../../target/pic_RawFourierDescriptor2}.
+Representing the raw contour, the images looks like in fig. \ref{fig:\generatedImgRoot/pic_RawFourierDescriptor1} 
+and in fig. \ref{fig:\generatedImgRoot/pic_RawFourierDescriptor2}.
 
-\image{../../../target/pic_RawFourierDescriptor1}{0.2}{%
+\image{\generatedImgRoot/pic_RawFourierDescriptor1}{0.2}{%
 		Raw picture 1 (\emph{contour with all frequencies}).}
-\image{../../../target/pic_RawFourierDescriptor2}{0.5}{%
+\image{\generatedImgRoot/pic_RawFourierDescriptor2}{0.5}{%
 		Raw picture 2 (\emph{contour with all frequencies}).}
 
 
@@ -122,15 +125,15 @@ Thanks to the Fourier Descriptors and the mentioned modifications,
 the recognition algorithm is invariant to object translations,
 rotations and scales.
 
-Representing a contour using the DFT, the image looks like in fig. \ref{fig:../../../target/pic_FourierDescriptor1} 
-and in fig. \ref{fig:../../../target/pic_FourierDescriptor2}.
+Representing a contour using the DFT, the image looks like in fig. \ref{fig:\generatedImgRoot/pic_FourierDescriptor1} 
+and in fig. \ref{fig:\generatedImgRoot/pic_FourierDescriptor2}.
 
-\image{../../../target/pic_FourierDescriptor1}{0.3}{%
+\image{\generatedImgRoot/pic_FourierDescriptor1}{0.3}{%
 		Reconstructed picture 1 (\emph{contours with reduced frequencies}).}
-\image{../../../target/pic_FourierDescriptor2}{0.5}{%
+\image{\generatedImgRoot/pic_FourierDescriptor2}{0.5}{%
 		Reconstructed picture 2 (\emph{contours with reduced frequencies}).}
 \newpage
-The final picture can be seen in fig. \ref{fig:../../../target/pic_final}.
+The final picture can be seen in fig. \ref{fig:\generatedImgRoot/pic_final}.
 Due to the fact that we have implemented a live search engine,
 objects that are currently analysed are marked in blue.
 If the difference term of the classification is less than \dDetectionThreshold{},
@@ -139,12 +142,14 @@ The first type of leaf has been colored in red
 and the second one has been colored in green.
 If it was not categorized, the blue colore is kept to show that the object was considered.
 
-\image{../../../target/pic_final}{0.9}{%
+\image{\generatedImgRoot/pic_final}{0.9}{%
 		Original picture (\emph{with classified objects}).} 
 
 Here can be seen, that the implementation of our algorithm works quite well.
 The two types of leaves have been classified correctly.
 \newpage
+
+
 \section{Optional}
 
 \subsection{What kind of problems do you encounter?}
