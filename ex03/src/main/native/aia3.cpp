@@ -74,11 +74,11 @@ int main(int argc, char** argv) {
 		double testScale = 1.5;
 		sigma = 1;
 		templateThresh = 0.7;
-		objThresh = 666; // TODO
-		scaleSteps = 666; // TODO
-		scaleRange[0] = 666; // TODO
-		scaleRange[1] = 666; // TODO
-		angleSteps = 666; // TODO
+		objThresh = 0.2; // TODO
+		scaleSteps = 32; // TODO
+		scaleRange[0] = 0.5; // TODO
+		scaleRange[1] = 2.0; // TODO
+		angleSteps = 180; // TODO
 		angleRange[0] = 0;
 		angleRange[1] = 2*CV_PI;
 		// generate test image
@@ -86,12 +86,12 @@ int main(int argc, char** argv) {
 	} else {
 		// if there was a second file specified
 		sigma = 1;
-		templateThresh = 666; // TODO
-		objThresh = 666; // TODO
-		scaleSteps = 666; // TODO
-		scaleRange[0] = 666; // TODO
-		scaleRange[1] = 666; // TODO
-		angleSteps = 666; // TODO
+		templateThresh = 0.2; // TODO
+		objThresh = 0.2; // TODO
+		scaleSteps = 32; // TODO
+		scaleRange[0] = 0.5; // TODO
+		scaleRange[1] = 2.0; // TODO
+		angleSteps = 180; // TODO
 		angleRange[0] = 0;
 		angleRange[1] = 2*CV_PI;
 		// load it
