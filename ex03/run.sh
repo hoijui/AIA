@@ -22,7 +22,16 @@ if [ ! -f "${RESOURCES_DIR}/img/poker.jpg" ]; then
 fi
 
 cd "${TARGET_DIR}"
-"${EXECUTABLE}" \
-	"${RESOURCES_DIR}/img/moneyTemplate100.jpg" \
-	"${RESOURCES_DIR}/img/poker.jpg"
+
+ARGUMENTS="${RESOURCES_DIR}/img/testTemplate.png"
+if [ "${1}" = "real" ]; then
+	ARGUMENTS="${RESOURCES_DIR}/img/moneyTemplate100.jpg" "${RESOURCES_DIR}/img/poker.jpg"
+fi
+
+if [ "${2}" = "debug" ]; then
+	echo "ARGUMENTS: ${ARGUMENTS}"
+	ddd "${EXECUTABLE}" &
+else
+	"${EXECUTABLE}" ${ARGUMENTS}
+fi
 
