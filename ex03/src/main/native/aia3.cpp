@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 	// load template image as gray-scale, paths in argv[1]
 	Mat inputImage = imread( argv[1], 0);
 	if (!inputImage.data) {
-		cout << "ERROR: Cannot load template image from\n" << argv[1] << endl;
+		cerr << "ERROR: Cannot load template image from\n" << argv[1] << endl;
 		return -1;
 	}
 	// convert 8U to 32F
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 		// load it
 		inputImage = imread( argv[2], 0);
 		if (!inputImage.data) {
-			cout << "ERROR: Cannot load test image from\n" << argv[2] << endl;
+			cerr << "ERROR: Cannot load test image from\n" << argv[2] << endl;
 			return -1;
 		}
 		// and convert it from 8U to 32F
