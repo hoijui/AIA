@@ -8,7 +8,7 @@ mkdir -p "${TARGET_DIR}"
 cd "${TARGET_DIR}"
 
 if [ ! -f CMakeCache.txt ]; then
-	cmake ..
+	cmake -DCMAKE_BUILD_TYPE=DEBUG ..
 fi
 make
 
