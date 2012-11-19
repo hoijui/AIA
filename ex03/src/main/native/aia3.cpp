@@ -188,18 +188,9 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 */
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
-	Mat gradientX;
-	Sobel(templateImage, gradientX, -1, 1, 0);
-	Mat gradientY;
-	Sobel(templateImage, gradientY, -1, 0, 1);
+	Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
-	Mat complexGradients(gradientX.cols, gradientX.rows, CV_32FC2);
-	vector<Mat> toBeCombinedGradients;
-	toBeCombinedGradients.push_back(gradientX);
-	toBeCombinedGradients.push_back(gradientY);
-	merge(toBeCombinedGradients, complexGradients);
-
-	Mat binaryEdges(gradientX.cols, gradientX.rows, CV_32FC1);
+	Mat binaryEdges(complexGradients.cols, complexGradients.rows, CV_32FC1);
 	for (int i = 0; i < complexGradients.cols; ++i) {
 		for (int j = 0; j < complexGradients.rows; ++j) {
 			float realP = complexGradients.at<Vec2f>(i, j)[0];
