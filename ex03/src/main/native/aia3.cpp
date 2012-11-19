@@ -188,7 +188,43 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 */
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
-	// TODO
+	Mat gradientX;
+	Sobel(templateImage, gradientX, -1, 1, 0);
+	Mat gradientY;
+	Sobel(templateImage, gradientY, -1, 0, 1);
+
+	Mat complexGradients(gradientX.cols, gradientX.rows, CV_32FC2);
+	vector<Mat> toBeCombinedGradients;
+	toBeCombinedGradients.push_back(gradientX);
+	toBeCombinedGradients.push_back(gradientY);
+	merge(toBeCombinedGradients, complexGradients);
+
+	Mat binaryEdges(gradientX.cols, gradientX.rows, CV_32FC1);
+	for (int i = 0; i < complexGradients.cols; ++i) {
+		for (int j = 0; j < complexGradients.rows; ++j) {
+			float realP = complexGradients.at<Vec2f>(i, j)[0];
+			float complexP = complexGradients.at<Vec2f>(i, j)[1];
+			binaryEdges.at<float>(i, j) = sqrt(realP*realP + complexP*complexP);
+		}
+	}
+	float maxGrad = 0.0f;
+	for (int i = 0; i < binaryEdges.cols; ++i) {
+		for (int j = 0; j < binaryEdges.rows; ++j) {
+			if (binaryEdges.at<float>(i, j) > maxGrad) {
+				maxGrad = binaryEdges.at<float>(i, j);
+			}
+		}
+	}
+	float threshhold = templateThresh * maxGrad;
+	threshold(binaryEdges, binaryEdges, threshhold,
+              255, //set all points meeting the threshold to 255
+              THRESH_BINARY //output is a binary image
+              );
+
+	vector<Mat> res;
+	res.push_back(binaryEdges);
+	res.push_back(complexGradients);
+	return res;
 }
 
 /* *****************************
