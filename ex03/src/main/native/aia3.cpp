@@ -152,6 +152,21 @@ angleSteps = 4; // TODO
 void plotHough(vector< vector<Mat> >& houghSpace) {
 
 	// TODO
+
+	Mat houghImage(houghSpace.at(0).at(0).cols, houghSpace.at(0).at(0).rows, CV_32FC1);
+
+	for (int i = 0; i < houghSpace.size(); ++i) {
+		for (int j = 0; j < houghSpace.at(i).size(); ++j) {
+			Mat& current = houghSpace.at(i).at(j);
+			for (int x = 0; x < current.cols; ++x) {
+				for (int y = 0; y < current.rows; ++y) {
+					houghImage.at<float>(x, y) += current.at<Vec2f>(x, y)[0];
+				}
+			}
+		}
+	}
+
+	showImage(houghImage, "Hough Space", 0);
 }
 
 /**
@@ -164,6 +179,57 @@ void plotHough(vector< vector<Mat> >& houghSpace) {
 void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftMask) {
 
 	// TODO
+
+	// O_B * O_I
+	Mat combined = templ[1].mul(templ[0]);
+
+	Mat transfCombined = rotateAndScale(combined, angle, scale);
+	Mat mean;
+	Mat stdDev;
+	meanStdDev(transfCombined, mean, stdDev);
+	//Mat meanMatrix = repmat<Vec2f>(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
+	//Mat meanMatrix(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
+	//transfCombined = transfCombined - meanMatrix; // centering
+	//transfCombined = transfCombined - mean.at<Vec2f>(0, 0); // centering
+	//transfCombined = transfCombined / stdDev.at<Vec2f>(0, 0); // normalization
+	normalize(transfCombined, transfCombined); // normalization
+	//centering(transfCombined,); // centering
+    dft(transfCombined, fftMask); // 2D dft
+}
+
+
+static Vec2f calcCenterOfGravity(const vector<Mat>& templ) {
+
+	Vec2f center(0.0f, 0.0f);
+	int contourPoints = 0;
+	for (int i = 0; i < templ[0].cols; ++i) {
+		for (int j = 0; j < templ[0].rows; ++j) {
+			if (templ[0].at<float>(i, j) > 0.0f) {
+				center += Vec2f(i, j);
+				contourPoints++;
+			}
+		}
+	}
+	center[0] = center[0] / contourPoints;
+	center[1] = center[1] / contourPoints;
+
+	return center;
+}
+
+static vector< vector<Vec2f> > calcRTable(const vector<Mat>& templ, const Vec2f& center) {
+
+	vector< vector<Vec2f> > rTable;
+	// TODO ?
+	return rTable;
+}
+
+static void complexConj(Mat& complexMat) {
+
+	for (int i = 0; i < complexMat.cols; ++i) {
+		for (int j = 0; j < complexMat.rows; ++j) {
+			complexMat.at<Vec2f>(i, j)[1] *= -1;
+		}
+	}
 }
 
 /**
@@ -179,6 +245,47 @@ void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftM
 vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double scaleSteps, double* scaleRange, double angleSteps, double* angleRange) {
 
 	// TODO
+
+	vector< vector<Mat> > res;
+
+	Vec2f center = calcCenterOfGravity(templ);
+	vector< vector<Vec2f> > rTable = calcRTable(templ, center);
+
+	double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
+	double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
+
+	for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
+		double scale = scaleRange[0] + (scaleI * scaleStep);
+		res.push_back(vector<Mat>());
+		for (int angleI = 0; angleI < (int)angleSteps; ++angleI) {
+			double angle = angleRange[0] + (angleI * angleStep);
+
+			// create scaled and rotated template gradient image
+			Mat testImage = rotateAndScale(templ[1], angle, scale);
+			// TODO use makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftMask)
+
+			// copy into a large matrix
+			Mat objectGradientBig = testImage.clone();
+			objectGradientBig = objectGradientBig.t();
+			objectGradientBig.resize(gradImage.cols);
+			objectGradientBig = objectGradientBig.t();
+			objectGradientBig.resize(gradImage.rows);
+
+			// shift it to be centered at (0.0, 0.0)
+			circShift(objectGradientBig, objectGradientBig, testImage.cols / 2, testImage.rows / 2);
+
+			// 2D DFT (FFT)
+			Mat gradFObj = Mat::zeros(objectGradientBig.cols, objectGradientBig.rows, CV_32FC2);
+			dft(objectGradientBig, gradFObj);
+			Mat gradFImg = Mat::zeros(gradImage.cols, gradImage.rows, CV_32FC2);
+			dft(gradImage, gradFImg);
+			complexConj(gradFObj);
+			Mat hough = gradFImg.mul(gradFObj);
+			res.at(scaleI).push_back(hough);
+		}
+	}
+
+	return res;
 }
 
 /**
