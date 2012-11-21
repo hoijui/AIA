@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 	inputImage.convertTo(templateImage, CV_32FC1);
 
 	// show template image
-	showImage(templateImage, "Template image", 0);
+//	showImage(templateImage, "Template image", 0);
 
 	// generate test image
 	Mat testImage;
@@ -76,9 +76,11 @@ int main(int argc, char** argv) {
 		templateThresh = 0.7;
 		objThresh = 0.2; // TODO
 		scaleSteps = 32; // TODO
+scaleSteps = 4; // TODO
 		scaleRange[0] = 0.5; // TODO
 		scaleRange[1] = 2.0; // TODO
 		angleSteps = 180; // TODO
+angleSteps = 4; // TODO
 		angleRange[0] = 0;
 		angleRange[1] = 2*CV_PI;
 		// generate test image
@@ -86,7 +88,7 @@ int main(int argc, char** argv) {
 	} else {
 		// if there was a second file specified
 		sigma = 1;
-		templateThresh = 0.2; // TODO
+		templateThresh = 0.7; // TODO
 		objThresh = 0.2; // TODO
 		scaleSteps = 32; // TODO
 		scaleRange[0] = 0.5; // TODO
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
 	}
 
 	// show test image
-	showImage(testImage, "testImage", 0);
+//	showImage(testImage, "testImage", 0);
 
 	// calculate directional gradient of test image as complex numbers (two channel image)
 	Mat gradImage = calcDirectionalGrad(testImage, sigma);
