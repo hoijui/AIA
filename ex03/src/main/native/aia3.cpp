@@ -76,11 +76,11 @@ int main(int argc, char** argv) {
 		templateThresh = 0.7;
 		objThresh = 0.2; // TODO
 		scaleSteps = 32; // TODO
-scaleSteps = 4; // TODO
+//scaleSteps = 4; // TODO
 		scaleRange[0] = 0.5; // TODO
 		scaleRange[1] = 2.0; // TODO
 		angleSteps = 180; // TODO
-angleSteps = 4; // TODO
+angleSteps = 8; // TODO
 		angleRange[0] = 0;
 		angleRange[1] = 2*CV_PI;
 		// generate test image
@@ -181,20 +181,65 @@ void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftM
 	// TODO
 
 	// O_B * O_I
-	Mat combined = templ[1].mul(templ[0]);
+	//Mat maskedGradients = templ[0].mul(templ[1]);
+	Mat maskedGradients(templ[0].cols, templ[0].rows, CV_32FC2);
+	for (int i = 0; i < templ[0].cols; ++i) {
+		for (int j = 0; j < templ[0].rows; ++j) {
+			bool mask = (templ[0].at<float>(i, j) < 0.5f);
+			maskedGradients.at<Vec2f>(i, j)[0] = mask ? 0.0f : templ[1].at<Vec2f>(i, j)[0];
+			maskedGradients.at<Vec2f>(i, j)[1] = mask ? 0.0f : templ[1].at<Vec2f>(i, j)[1];
+		}
+	}
 
-	Mat transfCombined = rotateAndScale(combined, angle, scale);
-	Mat mean;
-	Mat stdDev;
-	meanStdDev(transfCombined, mean, stdDev);
+	// scale and rotate the template
+	Mat transfGradients = rotateAndScale(maskedGradients, angle, scale);
+
+	// correct the phase shift
+	// exp(-i Theta) = cos(Theta) -i sin(Theta)
+	Vec2f correctPhase(cos(angle), sin(angle));
+	const float a = correctPhase[0];
+	const float b = correctPhase[1];
+	for (int i = 0; i < transfGradients.cols; ++i) {
+		for (int j = 0; j < transfGradients.rows; ++j) {
+			float c = transfGradients.at<Vec2f>(i, j)[0];
+			float d = transfGradients.at<Vec2f>(i, j)[1];
+			transfGradients.at<Vec2f>(i, j)[0] = a*c - b*d;
+			transfGradients.at<Vec2f>(i, j)[1] = b*c + a*d;
+		}
+	}
+
+	// put into large image
+	Mat gradientBig = transfGradients.clone();
+	gradientBig = gradientBig.t();
+	gradientBig.resize(fftMask.cols);
+	gradientBig = gradientBig.t();
+	gradientBig.resize(fftMask.rows);
+
+	circShift(gradientBig, gradientBig, transfGradients.cols / 2, transfGradients.rows / 2);
+
+/*
+	Mat transfBinary = rotateAndScale(templ[0], angle, scale);
+	Mat transfGradient = rotateAndScale(templ[1], angle, scale);
+	Mat complexRotation(transfGradient.cols, transfGradient.rows, CV_32FC2);
+	complexRotation.fill(Vec2f(1.0f, -angle)); // * exp(-i angle)    damit rotieren wir den phase shift zurueck zum original
+	Mat transfGradient = transfGradient.mul(complexRotation);
+	normalize(transfGradient, transfGradient);
+*/
+	// O_B * O_I
+	//Mat transfCombined = transfBinary.mul(transfGradient);
+
+	//Mat transfCombined = rotateAndScale(combined, angle, scale);
+	//Mat mean;
+	//Mat stdDev;
+	//meanStdDev(transfCombined, mean, stdDev);
 	//Mat meanMatrix = repmat<Vec2f>(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
 	//Mat meanMatrix(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
 	//transfCombined = transfCombined - meanMatrix; // centering
 	//transfCombined = transfCombined - mean.at<Vec2f>(0, 0); // centering
 	//transfCombined = transfCombined / stdDev.at<Vec2f>(0, 0); // normalization
-	normalize(transfCombined, transfCombined); // normalization
+	//normalize(transfCombined, transfCombined); // normalization
 	//centering(transfCombined,); // centering
-    dft(transfCombined, fftMask); // 2D dft
+    dft(gradientBig, fftMask, DFT_COMPLEX_OUTPUT); // 2D dft
 }
 
 
@@ -254,6 +299,11 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 	double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
 	double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
 
+	Mat imgFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+	dft(gradImage, imgFMask);
+
+	Mat objFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+
 	for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
 		double scale = scaleRange[0] + (scaleI * scaleStep);
 		res.push_back(vector<Mat>());
@@ -261,26 +311,39 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 			double angle = angleRange[0] + (angleI * angleStep);
 
 			// create scaled and rotated template gradient image
-			Mat testImage = rotateAndScale(templ[1], angle, scale);
+			makeFFTObjectMask(templ, scale, angle, objFMask) ;
+
+			Mat complexHough = imgFMask.mul(imgFMask);
+
+			// get rid of the phase
+			Mat hough(complexHough.cols, complexHough.rows, CV_32FC1);
+			for (int i = 0; i < complexHough.cols; ++i) {
+				for (int j = 0; j < complexHough.rows; ++j) {
+					hough.at<float>(i, j) = complexHough.at<Vec2f>(i, j)[1];
+				}
+			}
+			//Mat testImage = rotateAndScale(templ[1], angle, scale);
 			// TODO use makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftMask)
 
 			// copy into a large matrix
-			Mat objectGradientBig = testImage.clone();
+			/*Mat objectGradientBig = testImage.clone();
 			objectGradientBig = objectGradientBig.t();
 			objectGradientBig.resize(gradImage.cols);
 			objectGradientBig = objectGradientBig.t();
-			objectGradientBig.resize(gradImage.rows);
+			objectGradientBig.resize(gradImage.rows);*/
 
 			// shift it to be centered at (0.0, 0.0)
-			circShift(objectGradientBig, objectGradientBig, testImage.cols / 2, testImage.rows / 2);
+			//circShift(objectGradientBig, objectGradientBig, testImage.cols / 2, testImage.rows / 2);
 
 			// 2D DFT (FFT)
-			Mat gradFObj = Mat::zeros(objectGradientBig.cols, objectGradientBig.rows, CV_32FC2);
-			dft(objectGradientBig, gradFObj);
-			Mat gradFImg = Mat::zeros(gradImage.cols, gradImage.rows, CV_32FC2);
-			dft(gradImage, gradFImg);
-			complexConj(gradFObj);
-			Mat hough = gradFImg.mul(gradFObj);
+//			Mat gradFObj = Mat::zeros(objectGradientBig.cols, objectGradientBig.rows, CV_32FC2);
+//			dft(objectGradientBig, gradFObj);
+			//Mat gradFImg = Mat::zeros(gradImage.cols, gradImage.rows, CV_32FC2);
+			//dft(gradImage, gradFImg);
+
+			//complexConj(fftMask);
+			// correlation
+			//Mat hough = gradFImg.mul(fftMask);
 			res.at(scaleI).push_back(hough);
 		}
 	}
@@ -297,6 +360,7 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 */
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
+	// create x-axis
 	Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
 	Mat binaryEdges(complexGradients.cols, complexGradients.rows, CV_32FC1);
