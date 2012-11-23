@@ -26,6 +26,7 @@
   /Producer ()
   /Subject  ()
   /Keywords ()
+  %Version 1
 }
 
 % Simple picture reference
@@ -47,12 +48,144 @@
 }
 
 \newcommand{\generatedImgRoot}{../../../target}
-
+\newcommand{\targetFlag}{test_} %leeres Feld: Originalbilder, ``test_``-Feld: Testbilder
+\newcommand{\ssigma}{1} %standard deviation of directional gradient kernel
+\newcommand{\templateThresh}{0.7} %relative threshold for binarization of the template image
+\newcommand{\objThresh}{0.2} %relative threshold for maxima in hough space
+\newcommand{\scaleSteps}{32} %scale resolution in terms of number of scales to be investigated
+\newcommand{\scaleRangeMin}{0.5} %scale of angles [min, max]
+\newcommand{\scaleRangeMax}{2} %scale of angles [min, max]
+\newcommand{\angleSteps}{180} %angle resolution in terms of number of angles to be investigated
+\newcommand{\angleRangeMin}{0} %range of angles [min, max)
+\newcommand{\angleRangeMax}{2*\pi} %range of angles [min, max)
 
 \begin{document}
 
 \maketitle
 
-TODO
+\section{Hough Detector - Object Recognition with OpenCV}
+
+
+\subsection{The Task}
+In this exercise a object recognition with help of the Hough Detector is realized. 
+The task consisted of detecting multiple objects in an image, such that they are colored.
+For this, an input picture has been given that contains several interesting objects and 
+quite a lot disturbance objects. The whole situation can be seen in 
+fig. \ref{fig:\generatedImgRoot/\targetFlag1_Input.jpg}.
+
+\image{\generatedImgRoot/\targetFlag1_Input.jpg}{0.4}{%
+		Input picture (\emph{has to be analysed}).}
+
+In this picture, you see a poker situation containing several dollar notes, some cards
+and some toy animals lying on the ground, which has a certain structure.
+Secondly, a template picture has been given that contains a clean version of the
+interesting object that shall be found in the input picture.
+It can be seen in fig. \ref{fig:\generatedImgRoot/\targetFlag2_Template.jpg}.
+
+\image{\generatedImgRoot/\targetFlag2_Template.jpg}{0.3}{%
+		Template picture (\emph{has to be found}).}
+
+Here, one can see a 100 dollar note. Those dollar notes are the same ones
+that are spread in the input picture and they shall be found.
+
+\subsection{Preprocessing the Example Object}
+
+The object of interest $O(x,y)$ is processed to obtain two representations.
+The first representation is the extraction of the complex gradients $O^I(x,y)$.
+\begin{align}
+O^I(x,y) = \frac{\delta}{\delta x} O(x,y) + i \cdot \frac{\delta}{\delta y} O(x,y) 
+\end{align}
+The real part of the complex gradient of the object picture can be seen in 
+fig. \ref{fig:\generatedImgRoot/\targetFlag3_ObjectIreal.png}.
+
+\image{\generatedImgRoot/\targetFlag3_ObjectIreal.png}{0.4}{%
+		Object of interest $O^I(x,y)$ (\emph{gradient in x-direction}).}
+
+The imaginary part of the complex gradient of the objekct picture can be seen in 
+fig. \ref{fig:\generatedImgRoot/\targetFlag4_ObjectIimag.png}.
+
+\image{\generatedImgRoot/\targetFlag4_ObjectIimag.png}{0.4}{%
+		Object of interest $O^I(x,y)$ (\emph{gradient in y-direction}).}
+\pagebreak
+The second representation is the binary edge image $O^B(x,y)$.
+\begin{align}
+O^B(x,y) = | O^I(x,y) | > ( T^B \cdot max_{x,y} \{| O^I(x,y) |\}) 
+\end{align}
+It is obtained using threshold $T^B$, which was in our implementation set to \templateThresh.
+The binary object picture can be seen in fig. \ref{fig:\generatedImgRoot/\targetFlag5_ObjectB.png}.
+
+\image{\generatedImgRoot/\targetFlag5_ObjectB.png}{0.3}{%
+		Object of interest $O^B(x,y)$ (\emph{binary}).}
+
+Here, one can see that that the binary image is indicating pixels on edges. 
+They are standing for large local gradient magnitudes.
+\subsection{Preprocessing the Image}
+
+The image $I(x,y)$ containing objects of interest is processed similarly 
+to give complex gradients $I^I(x,y)$.
+\begin{align}
+I^I(x,y) = \frac{\delta}{\delta x} I(x,y) + i \cdot \frac{\delta}{\delta y} I(x,y) 
+\end{align}
+The real part of the complex gradient of the image can be seen in 
+fig. \ref{fig:\generatedImgRoot/\targetFlag6_ImageIreal.png}.
+
+\image{\generatedImgRoot/\targetFlag6_ImageIreal.png}{0.5}{%
+		Image $I^I(x,y)$ (\emph{gradient in x-direction}).}
+\pagebreak
+The imaginary part of the complex gradient of the objekct picture can be seen in 
+fig. \ref{fig:\generatedImgRoot/\targetFlag7_ImageIimag.png}.
+
+\image{\generatedImgRoot/\targetFlag7_ImageIimag.png}{0.5}{%
+		Image $I^I(x,y)$ (\emph{gradient in y-direction}).}
+
+\subsection{Correlation in Frequency Domain}
+In order to detect centers in the input image in which the interesting objects could be projected,
+the correlation is measured in the fourier space as can be seen in the following formula:
+\begin{align}
+H_G(x,y,\theta,s) = |\Re\{(O^I(x,y)O^B(x,y))\odot I^I(x,y)\}|
+\end{align}
+But before we are able to process this, we still have to do some preparation steps.\\
+Firstly, we...\\
+Secondly, we...\\
+Thirdly, we...\\
+Those fourier correlations are built for different scales and different rotations.\\
+It was done for...\\
+In order to visualize the interim result, the Hough space is prepared in the following way:
+They were summed up all together.
+In fig. \ref{fig:\generatedImgRoot/\targetFlag8_Hough.png} one can see the interim result.
+
+\image{\generatedImgRoot/\targetFlag8_Hough.png}{0.4}{%
+		Hough Space (\emph{showing votes}).}
+
+Those magnitudes do not stand for a certain object all together. 
+A relative threshold ensures that only the greatest ones are detected as object centers.
+In our implementation it was set to \objThresh.
+In the following fig. \ref{fig:\generatedImgRoot/\targetFlag9_maxHough.png},
+one can see the detected maxima that stand each for a object center.
+
+\image{\generatedImgRoot/\targetFlag9_maxHough.png}{0.4}{%
+		Maxima points in the Hough Space (\emph{identified object centers}).}
+
+Here, one can see that five 100 dollar notes are detected by our algorithm.
+All in all, there have been seven possible ones, which were all in all very difficult
+to detect, even for humans.
+
+\subsection{Visualisation of 4D Hough Space}
+
+In the following, one can see the result of the working process of our algorithm.
+In fig. \ref{fig:\generatedImgRoot/\targetFlag10_result.png}, 
+it should become visible, that those objects detected object have been detected correctly.
+
+\image{\generatedImgRoot/\targetFlag10_result.png}{0.4}{%
+		Output picture (\emph{identified objects in red}).}
+
+\newpage
+\section{Printed Code:}
+
+%\lstset{language=<C++>}
+%\begin{lstlisting}
+%test
+%\end{lstlisting}
+\lstinputlisting[breaklines=true]{../native/aia3.cpp}
 
 \end{document}
