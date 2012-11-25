@@ -36,113 +36,112 @@ usage:
 */
 int main(int argc, char** argv) {
 
-	// check if image paths were defined
-	if ( (argc != 2) and (argc != 3) ) {
-		cerr << "Usage: aia3 <path to template image> [<path to test image>]" << endl;
-		return -1;
-	}
+    // check if image paths were defined
+    if ( (argc != 2) and (argc != 3) ) {
+        cerr << "Usage: aia3 <path to template image> [<path to test image>]" << endl;
+        return -1;
+    }
 
-	// processing parameter
-	double sigma;			// standard deviation of directional gradient kernel
-	double templateThresh;		// relative threshold for binarization of the template image
-	double objThresh;			// relative threshold for maxima in hough space
-	double scaleSteps;			// scale resolution in terms of number of scales to be investigated
-	double scaleRange[2];		// scale of angles [min, max]
-	double angleSteps;			// angle resolution in terms of number of angles to be investigated
-	double angleRange[2];		// range of angles [min, max)
+    // processing parameter
+    double sigma;			// standard deviation of directional gradient kernel
+    double templateThresh;		// relative threshold for binarization of the template image
+    double objThresh;			// relative threshold for maxima in hough space
+    double scaleSteps;			// scale resolution in terms of number of scales to be investigated
+    double scaleRange[2];		// scale of angles [min, max]
+    double angleSteps;			// angle resolution in terms of number of angles to be investigated
+    double angleRange[2];		// range of angles [min, max)
 
-	// load template image as gray-scale, paths in argv[1]
-	Mat inputImage = imread( argv[1], 0);
-	if (!inputImage.data) {
-		cerr << "ERROR: Cannot load template image from\n" << argv[1] << endl;
-		return -1;
-	}
-	// convert 8U to 32F
-	Mat templateImage;
-	inputImage.convertTo(templateImage, CV_32FC1);
+    // load template image as gray-scale, paths in argv[1]
+    Mat inputImage = imread( argv[1], 0);
+    if (!inputImage.data) {
+        cerr << "ERROR: Cannot load template image from\n" << argv[1] << endl;
+        return -1;
+    }
+    // convert 8U to 32F
+    Mat templateImage;
+    inputImage.convertTo(templateImage, CV_32FC1);
 
-	// show template image
+    // show template image
 //	showImage(templateImage, "Template image", 0);
 
-	// generate test image
-	Mat testImage;
-	// if there is no path specified, generate test image from template image
-	if (argc == 2) {
-		// angle to rotate template image (in radian)
-		double testAngle = 30./180.*CV_PI;
-		// scale to scale template image
-		double testScale = 1.5;
-		sigma = 1;
-		templateThresh = 0.7;
-		objThresh = 0.2; // TODO
-		scaleSteps = 32; // TODO
+    // generate test image
+    Mat testImage;
+    // if there is no path specified, generate test image from template image
+    if (argc == 2) {
+        // angle to rotate template image (in radian)
+        double testAngle = 30./180.*CV_PI;
+        // scale to scale template image
+        double testScale = 1.5;
+        sigma = 1;
+        templateThresh = 0.7;
+        objThresh = 0.8; // TODO
+        scaleSteps = 20; // TODO
 //scaleSteps = 4; // TODO
-		scaleRange[0] = 0.5; // TODO
-		scaleRange[1] = 2.0; // TODO
-		angleSteps = 180; // TODO
-angleSteps = 8; // TODO
-		angleRange[0] = 0;
-		angleRange[1] = 2*CV_PI;
-		// generate test image
-		testImage = makeTestImage(templateImage, testAngle, testScale, scaleRange);
-	} else {
-		// if there was a second file specified
-		sigma = 1;
-		templateThresh = 0.7; // TODO
-		objThresh = 0.2; // TODO
-		scaleSteps = 32; // TODO
-		scaleRange[0] = 0.5; // TODO
-		scaleRange[1] = 2.0; // TODO
-		angleSteps = 180; // TODO
-		angleRange[0] = 0;
-		angleRange[1] = 2*CV_PI;
-		// load it
-		inputImage = imread( argv[2], 0);
-		if (!inputImage.data) {
-			cerr << "ERROR: Cannot load test image from\n" << argv[2] << endl;
-			return -1;
-		}
-		// and convert it from 8U to 32F
-		inputImage.convertTo(testImage, CV_32FC1);
-	}
+        scaleRange[0] = 0.5; // TODO
+        scaleRange[1] = 2.0; // TODO
+        angleSteps = 12; // TODO
+        angleRange[0] = 0;
+        angleRange[1] = 2*CV_PI;
+        // generate test image
+        testImage = makeTestImage(templateImage, testAngle, testScale, scaleRange);
+    } else {
+        // if there was a second file specified
+        sigma = 1;
+        templateThresh = 0.7; // TODO
+        objThresh = 0.2; // TODO
+        scaleSteps = 32; // TODO
+        scaleRange[0] = 0.5; // TODO
+        scaleRange[1] = 2.0; // TODO
+        angleSteps = 180; // TODO
+        angleRange[0] = 0;
+        angleRange[1] = 2*CV_PI;
+        // load it
+        inputImage = imread( argv[2], 0);
+        if (!inputImage.data) {
+            cerr << "ERROR: Cannot load test image from\n" << argv[2] << endl;
+            return -1;
+        }
+        // and convert it from 8U to 32F
+        inputImage.convertTo(testImage, CV_32FC1);
+    }
 
-	// show test image
+    // show test image
 //	showImage(testImage, "testImage", 0);
 
-	// calculate directional gradient of test image as complex numbers (two channel image)
-	Mat gradImage = calcDirectionalGrad(testImage, sigma);
+    // calculate directional gradient of test image as complex numbers (two channel image)
+    Mat gradImage = calcDirectionalGrad(testImage, sigma);
 
-	// generate template from template image
-	// templ[0] == binary image
-	// templ[0] == directional gradient image
-	vector<Mat> templ = makeObjectTemplate(templateImage, sigma, templateThresh);
+    // generate template from template image
+    // templ[0] == binary image
+    // templ[0] == directional gradient image
+    vector<Mat> templ = makeObjectTemplate(templateImage, sigma, templateThresh);
 
-	// show binary image
-	showImage(templ[0], "Binary part of template", 0);
+    // show binary image
+    showImage(templ[0], "Binary part of template", 0);
 
-	// perfrom general hough transformation
-	vector< vector<Mat> > houghSpace = generalHough(gradImage, templ, scaleSteps, scaleRange, angleSteps, angleRange);
+    // perfrom general hough transformation
+    vector< vector<Mat> > houghSpace = generalHough(gradImage, templ, scaleSteps, scaleRange, angleSteps, angleRange);
 
-	// plot hough space (max over angle- and scale-dimension)
-	plotHough(houghSpace);
+    // plot hough space (max over angle- and scale-dimension)
+    plotHough(houghSpace);
 
-	// find maxima in hough space
-	vector<Scalar> objList;
-	findHoughMaxima(houghSpace, objThresh, objList);
+    // find maxima in hough space
+    vector<Scalar> objList;
+    findHoughMaxima(houghSpace, objThresh, objList);
 
-	// print found objects on screen
-	cout << "Number of objects: " << objList.size() << endl;
-	int i=0;
-	for (vector<Scalar>::iterator it = objList.begin(); it != objList.end(); it++, i++) {
-		cout << i << "\tScale:\t" << (scaleRange[1] - scaleRange[0])/(scaleSteps-1)*(*it).val[0] + scaleRange[0];
-		cout << "\tAngle:\t" << ((angleRange[1] - angleRange[0])/(angleSteps)*(*it).val[1] + angleRange[0])/CV_PI*180;
-		cout << "\tPosition:\t(" << (*it).val[2] << ", " << (*it).val[3] << " )" << endl;
-	}
+    // print found objects on screen
+    cout << "Number of objects: " << objList.size() << endl;
+    int i=0;
+    for (vector<Scalar>::iterator it = objList.begin(); it != objList.end(); it++, i++) {
+        cout << i << "\tScale:\t" << (scaleRange[1] - scaleRange[0])/(scaleSteps-1)*(*it).val[0] + scaleRange[0];
+        cout << "\tAngle:\t" << ((angleRange[1] - angleRange[0])/(angleSteps)*(*it).val[1] + angleRange[0])/CV_PI*180;
+        cout << "\tPosition:\t(" << (*it).val[2] << ", " << (*it).val[3] << " )" << endl;
+    }
 
-	// show final detection result
-	plotHoughDetectionResult(testImage, templ, objList, scaleSteps, scaleRange, angleSteps, angleRange);
+    // show final detection result
+    plotHoughDetectionResult(testImage, templ, objList, scaleSteps, scaleRange, angleSteps, angleRange);
 
-	return 0;
+    return 0;
 }
 
 /**
@@ -151,22 +150,22 @@ angleSteps = 8; // TODO
 */
 void plotHough(vector< vector<Mat> >& houghSpace) {
 
-	// TODO
+    // TODO
 
-	Mat houghImage(houghSpace.at(0).at(0).cols, houghSpace.at(0).at(0).rows, CV_32FC1);
+    Mat houghImage(houghSpace.at(0).at(0).cols, houghSpace.at(0).at(0).rows, CV_32FC1);
 
-	for (int i = 0; i < houghSpace.size(); ++i) {
-		for (int j = 0; j < houghSpace.at(i).size(); ++j) {
-			Mat& current = houghSpace.at(i).at(j);
-			for (int x = 0; x < current.cols; ++x) {
-				for (int y = 0; y < current.rows; ++y) {
-					houghImage.at<float>(x, y) += current.at<Vec2f>(x, y)[0];
-				}
-			}
-		}
-	}
-
-	showImage(houghImage, "Hough Space", 0);
+    for (int i = 0; i < houghSpace.size(); ++i) {
+        for (int j = 0; j < houghSpace.at(i).size(); ++j) {
+            Mat& current = houghSpace.at(i).at(j);
+            for (int x = 0; x < current.cols; ++x) {
+                for (int y = 0; y < current.rows; ++y) {
+                    houghImage.at<float>(x,y) += current.at<float>(x,y);
+                }
+            }
+        }
+    }
+    normalize(houghImage,houghImage,0,1,CV_MINMAX);
+    showImage(houghImage, "Hough Space", 0);
 }
 
 /**
@@ -178,103 +177,82 @@ void plotHough(vector< vector<Mat> >& houghSpace) {
 */
 void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftMask) {
 
-	// TODO
+    Mat binMask = templ[0].clone();
+    Mat complGrad = templ[1].clone();
 
-	// O_B * O_I
-	//Mat maskedGradients = templ[0].mul(templ[1]);
-	Mat maskedGradients(templ[0].cols, templ[0].rows, CV_32FC2);
-	for (int i = 0; i < templ[0].cols; ++i) {
-		for (int j = 0; j < templ[0].rows; ++j) {
-			bool mask = (templ[0].at<float>(i, j) < 0.5f);
-			maskedGradients.at<Vec2f>(i, j)[0] = mask ? 0.0f : templ[1].at<Vec2f>(i, j)[0];
-			maskedGradients.at<Vec2f>(i, j)[1] = mask ? 0.0f : templ[1].at<Vec2f>(i, j)[1];
-		}
-	}
+    binMask = rotateAndScale(binMask,angle,scale);
+    complGrad = rotateAndScale(complGrad,angle,scale);
 
-	// scale and rotate the template
-	Mat transfGradients = rotateAndScale(maskedGradients, angle, scale);
+    //correction of the phase shift
+    float imRot = sin(angle);
+    float reRot = cos(angle);
+    //summation of magnitudes of the complex gradient
+    float magnitudeSum = 0.0f;
+    for(int i = 0; i < complGrad.cols; i++)
+    {
+        for(int j = 0; j < complGrad.rows; j++)
+        {
+            float re = complGrad.at<Vec2f>(i,j)[0];
+            float im = complGrad.at<Vec2f>(i,j)[1];
+            complGrad.at<Vec2f>(i,j)[0] = re * reRot + im * imRot;
+            complGrad.at<Vec2f>(i,j)[1] = im * reRot - re * imRot;
 
-	// correct the phase shift
-	// exp(-i Theta) = cos(Theta) -i sin(Theta)
-	Vec2f correctPhase(cos(angle), sin(angle));
-	const float a = correctPhase[0];
-	const float b = correctPhase[1];
-	for (int i = 0; i < transfGradients.cols; ++i) {
-		for (int j = 0; j < transfGradients.rows; ++j) {
-			float c = transfGradients.at<Vec2f>(i, j)[0];
-			float d = transfGradients.at<Vec2f>(i, j)[1];
-			transfGradients.at<Vec2f>(i, j)[0] = a*c - b*d;
-			transfGradients.at<Vec2f>(i, j)[1] = b*c + a*d;
-		}
-	}
+            magnitudeSum += sqrt(pow(complGrad.at<Vec2f>(i,j)[0],2)+pow(complGrad.at<Vec2f>(i,j)[1],2));
+        }
+    }
 
-	// put into large image
-	Mat gradientBig = transfGradients.clone();
-	gradientBig = gradientBig.t();
-	gradientBig.resize(fftMask.cols);
-	gradientBig = gradientBig.t();
-	gradientBig.resize(fftMask.rows);
+    //retain scale invariance
+    complGrad /= magnitudeSum;
 
-	circShift(gradientBig, gradientBig, transfGradients.cols / 2, transfGradients.rows / 2);
+    //multiply to get object mask, insert directly into padded mask
+    Mat bigMask = Mat::zeros(fftMask.cols,fftMask.rows,CV_32FC2);
+    for(int i = 0; i < binMask.cols; i++)
+    {
+        for(int j = 0; j < binMask.rows; j++)
+        {
+            bigMask.at<Vec2f>(i,j)[0] = binMask.at<float>(i,j)*complGrad.at<Vec2f>(i,j)[0];
+            bigMask.at<Vec2f>(i,j)[1] = binMask.at<float>(i,j)*complGrad.at<Vec2f>(i,j)[1];
+        }
+    }
 
-/*
-	Mat transfBinary = rotateAndScale(templ[0], angle, scale);
-	Mat transfGradient = rotateAndScale(templ[1], angle, scale);
-	Mat complexRotation(transfGradient.cols, transfGradient.rows, CV_32FC2);
-	complexRotation.fill(Vec2f(1.0f, -angle)); // * exp(-i angle)    damit rotieren wir den phase shift zurueck zum original
-	Mat transfGradient = transfGradient.mul(complexRotation);
-	normalize(transfGradient, transfGradient);
-*/
-	// O_B * O_I
-	//Mat transfCombined = transfBinary.mul(transfGradient);
-
-	//Mat transfCombined = rotateAndScale(combined, angle, scale);
-	//Mat mean;
-	//Mat stdDev;
-	//meanStdDev(transfCombined, mean, stdDev);
-	//Mat meanMatrix = repmat<Vec2f>(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
-	//Mat meanMatrix(transfCombined.cols, transfCombined.rows, mean.at<Vec2f>(0, 0)));
-	//transfCombined = transfCombined - meanMatrix; // centering
-	//transfCombined = transfCombined - mean.at<Vec2f>(0, 0); // centering
-	//transfCombined = transfCombined / stdDev.at<Vec2f>(0, 0); // normalization
-	//normalize(transfCombined, transfCombined); // normalization
-	//centering(transfCombined,); // centering
-    dft(gradientBig, fftMask, DFT_COMPLEX_OUTPUT); // 2D dft
+    //circular shift
+    circShift(bigMask,bigMask,-binMask.cols/2,-binMask.rows/2);
+    dft(bigMask,fftMask,DFT_COMPLEX_OUTPUT);
 }
 
 
 static Vec2f calcCenterOfGravity(const vector<Mat>& templ) {
 
-	Vec2f center(0.0f, 0.0f);
-	int contourPoints = 0;
-	for (int i = 0; i < templ[0].cols; ++i) {
-		for (int j = 0; j < templ[0].rows; ++j) {
-			if (templ[0].at<float>(i, j) > 0.0f) {
-				center += Vec2f(i, j);
-				contourPoints++;
-			}
-		}
-	}
-	center[0] = center[0] / contourPoints;
-	center[1] = center[1] / contourPoints;
+    Vec2f center(0.0f, 0.0f);
+    int contourPoints = 0;
+    for (int i = 0; i < templ[0].cols; ++i) {
+        for (int j = 0; j < templ[0].rows; ++j) {
+            if (templ[0].at<float>(i, j) > 0.0f) {
+                center += Vec2f(i, j);
+                contourPoints++;
+            }
+        }
+    }
+    center[0] = center[0] / contourPoints;
+    center[1] = center[1] / contourPoints;
 
-	return center;
+    return center;
 }
 
 static vector< vector<Vec2f> > calcRTable(const vector<Mat>& templ, const Vec2f& center) {
 
-	vector< vector<Vec2f> > rTable;
-	// TODO ?
-	return rTable;
+    vector< vector<Vec2f> > rTable;
+    // TODO ?
+    return rTable;
 }
 
 static void complexConj(Mat& complexMat) {
 
-	for (int i = 0; i < complexMat.cols; ++i) {
-		for (int j = 0; j < complexMat.rows; ++j) {
-			complexMat.at<Vec2f>(i, j)[1] *= -1;
-		}
-	}
+    for (int i = 0; i < complexMat.cols; ++i) {
+        for (int j = 0; j < complexMat.rows; ++j) {
+            complexMat.at<Vec2f>(i, j)[1] *= -1;
+        }
+    }
 }
 
 /**
@@ -289,66 +267,53 @@ static void complexConj(Mat& complexMat) {
 */
 vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double scaleSteps, double* scaleRange, double angleSteps, double* angleRange) {
 
-	// TODO
+    // TODO
 
-	vector< vector<Mat> > res;
+    vector< vector<Mat> > res;
 
-	Vec2f center = calcCenterOfGravity(templ);
-	vector< vector<Vec2f> > rTable = calcRTable(templ, center);
+    Vec2f center = calcCenterOfGravity(templ);
+    vector< vector<Vec2f> > rTable = calcRTable(templ, center);
 
-	double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
-	double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
+    double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
+    double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
 
-	Mat imgFMask(gradImage.cols, gradImage.rows, CV_32FC2);
-	dft(gradImage, imgFMask);
+    Mat imgFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+    dft(gradImage, imgFMask, DFT_COMPLEX_OUTPUT);
 
-	Mat objFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+    Mat objFMask(gradImage.cols, gradImage.rows, CV_32FC2);
 
-	for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
-		double scale = scaleRange[0] + (scaleI * scaleStep);
-		res.push_back(vector<Mat>());
-		for (int angleI = 0; angleI < (int)angleSteps; ++angleI) {
-			double angle = angleRange[0] + (angleI * angleStep);
+    for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
+        double scale = scaleRange[0] + (scaleI * scaleStep);
+        //res.push_back(vector<Mat>());
+        vector<Mat> angleRes;
+        for (int angleI = 0; angleI < (int)angleSteps; ++angleI) {
+            double angle = angleRange[0] + (angleI * angleStep);
 
-			// create scaled and rotated template gradient image
-			makeFFTObjectMask(templ, scale, angle, objFMask) ;
+            // create scaled and rotated template gradient image
+            makeFFTObjectMask(templ, scale, angle, objFMask) ;
 
-			Mat complexHough = imgFMask.mul(imgFMask);
+            Mat complexHough = Mat::zeros(imgFMask.cols,imgFMask.rows,imgFMask.type());
+            mulSpectrums(imgFMask,objFMask,complexHough,
+                         0,//no flags
+                         true //conjugate objFMask before multiplication
+                         );
+            //now do the inverse dft
+            dft(complexHough,complexHough,DFT_INVERSE | DFT_SCALE);
 
-			// get rid of the phase
-			Mat hough(complexHough.cols, complexHough.rows, CV_32FC1);
-			for (int i = 0; i < complexHough.cols; ++i) {
-				for (int j = 0; j < complexHough.rows; ++j) {
-					hough.at<float>(i, j) = complexHough.at<Vec2f>(i, j)[1];
-				}
-			}
-			//Mat testImage = rotateAndScale(templ[1], angle, scale);
-			// TODO use makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftMask)
+            // get rid of the phase
+            Mat hough(complexHough.cols, complexHough.rows, CV_32FC1);
+            for (int i = 0; i < complexHough.cols; ++i) {
+                for (int j = 0; j < complexHough.rows; ++j) {
+                    hough.at<float>(i, j) = abs(complexHough.at<Vec2f>(i, j)[0]);
+                    //hough.at<float>(i,j) = sqrt(pow(complexHough.at<Vec2f>(i, j)[0],2)+pow(complexHough.at<Vec2f>(i, j)[1],2));
+                }
+            }
+            angleRes.push_back(hough);
+        }
+        res.push_back(angleRes);
+    }
 
-			// copy into a large matrix
-			/*Mat objectGradientBig = testImage.clone();
-			objectGradientBig = objectGradientBig.t();
-			objectGradientBig.resize(gradImage.cols);
-			objectGradientBig = objectGradientBig.t();
-			objectGradientBig.resize(gradImage.rows);*/
-
-			// shift it to be centered at (0.0, 0.0)
-			//circShift(objectGradientBig, objectGradientBig, testImage.cols / 2, testImage.rows / 2);
-
-			// 2D DFT (FFT)
-//			Mat gradFObj = Mat::zeros(objectGradientBig.cols, objectGradientBig.rows, CV_32FC2);
-//			dft(objectGradientBig, gradFObj);
-			//Mat gradFImg = Mat::zeros(gradImage.cols, gradImage.rows, CV_32FC2);
-			//dft(gradImage, gradFImg);
-
-			//complexConj(fftMask);
-			// correlation
-			//Mat hough = gradFImg.mul(fftMask);
-			res.at(scaleI).push_back(hough);
-		}
-	}
-
-	return res;
+    return res;
 }
 
 /**
@@ -360,35 +325,35 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 */
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
-	// create x-axis
-	Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
+    // create x-axis
+    Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
-	Mat binaryEdges(complexGradients.cols, complexGradients.rows, CV_32FC1);
-	for (int i = 0; i < complexGradients.cols; ++i) {
-		for (int j = 0; j < complexGradients.rows; ++j) {
-			float realP = complexGradients.at<Vec2f>(i, j)[0];
-			float complexP = complexGradients.at<Vec2f>(i, j)[1];
-			binaryEdges.at<float>(i, j) = sqrt(realP*realP + complexP*complexP);
-		}
-	}
-	float maxGrad = 0.0f;
-	for (int i = 0; i < binaryEdges.cols; ++i) {
-		for (int j = 0; j < binaryEdges.rows; ++j) {
-			if (binaryEdges.at<float>(i, j) > maxGrad) {
-				maxGrad = binaryEdges.at<float>(i, j);
-			}
-		}
-	}
-	float threshhold = templateThresh * maxGrad;
-	threshold(binaryEdges, binaryEdges, threshhold,
+    Mat binaryEdges(complexGradients.cols, complexGradients.rows, CV_32FC1);
+    for (int i = 0; i < complexGradients.cols; ++i) {
+        for (int j = 0; j < complexGradients.rows; ++j) {
+            float realP = complexGradients.at<Vec2f>(i, j)[0];
+            float complexP = complexGradients.at<Vec2f>(i, j)[1];
+            binaryEdges.at<float>(i, j) = sqrt(realP*realP + complexP*complexP);
+        }
+    }
+    float maxGrad = 0.0f;
+    for (int i = 0; i < binaryEdges.cols; ++i) {
+        for (int j = 0; j < binaryEdges.rows; ++j) {
+            if (binaryEdges.at<float>(i, j) > maxGrad) {
+                maxGrad = binaryEdges.at<float>(i, j);
+            }
+        }
+    }
+    float threshhold = templateThresh * maxGrad;
+    threshold(binaryEdges, binaryEdges, threshhold,
               255, //set all points meeting the threshold to 255
               THRESH_BINARY //output is a binary image
               );
 
-	vector<Mat> res;
-	res.push_back(binaryEdges);
-	res.push_back(complexGradients);
-	return res;
+    vector<Mat> res;
+    res.push_back(binaryEdges);
+    res.push_back(complexGradients);
+    return res;
 }
 
 /* *****************************
@@ -403,39 +368,39 @@ vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double template
 */
 Mat calcDirectionalGrad(Mat& image, double sigma) {
 
-	// compute kernel size
-	int ksize = max(sigma*3,3.);
-	if (ksize % 2 == 0) {
-		ksize++;
-	}
-	double mu = ksize / 2.0;
+    // compute kernel size
+    int ksize = max(sigma*3,3.);
+    if (ksize % 2 == 0) {
+        ksize++;
+    }
+    double mu = ksize / 2.0;
 
-	// generate kernels for x- and y-direction
-	double val, sum=0;
-	Mat kernel(ksize, ksize, CV_32FC1);
-	//Mat kernel_y(ksize, ksize, CV_32FC1);
-	for(int i=0; i<ksize; i++) {
-		for(int j=0; j<ksize; j++) {
-			val  = pow((i+0.5-mu)/sigma,2);
-			val += pow((j+0.5-mu)/sigma,2);
-			val = exp(-0.5*val);
-			sum += val;
+    // generate kernels for x- and y-direction
+    double val, sum=0;
+    Mat kernel(ksize, ksize, CV_32FC1);
+    //Mat kernel_y(ksize, ksize, CV_32FC1);
+    for(int i=0; i<ksize; i++) {
+        for(int j=0; j<ksize; j++) {
+            val  = pow((i+0.5-mu)/sigma,2);
+            val += pow((j+0.5-mu)/sigma,2);
+            val = exp(-0.5*val);
+            sum += val;
 
-			kernel.at<float>(i, j) = -(j+0.5-mu)*val;
-		}
-	}
-	kernel /= sum;
+            kernel.at<float>(i, j) = -(j+0.5-mu)*val;
+        }
+    }
+    kernel /= sum;
 
-	// use those kernels to compute gradient in x- and y-direction independently
-	vector<Mat> grad(2);
-	filter2D(image, grad[0], -1, kernel);
-	filter2D(image, grad[1], -1, kernel.t());
+    // use those kernels to compute gradient in x- and y-direction independently
+    vector<Mat> grad(2);
+    filter2D(image, grad[0], -1, kernel);
+    filter2D(image, grad[1], -1, kernel.t());
 
-	// combine both real-valued gradient images to a single complex-valued image
-	Mat output;
-	merge(grad, output);
+    // combine both real-valued gradient images to a single complex-valued image
+    Mat output;
+    merge(grad, output);
 
-	return output;
+    return output;
 }
 
 /**
@@ -447,52 +412,52 @@ Mat calcDirectionalGrad(Mat& image, double sigma) {
 */
 Mat rotateAndScale(Mat& image, double angle, double scale) {
 
-	// create transformation matrices
-	// translation to origin
-	Mat T = Mat::eye(3, 3, CV_32FC1);
-	T.at<float>(0, 2) = -image.cols/2.0;
-	T.at<float>(1, 2) = -image.rows/2.0;
-	// rotation
-	Mat R = Mat::eye(3, 3, CV_32FC1);
-	R.at<float>(0, 0) =  cos(angle);
-	R.at<float>(0, 1) = -sin(angle);
-	R.at<float>(1, 0) =  sin(angle);
-	R.at<float>(1, 1) =  cos(angle);
-	// scale
-	Mat S = Mat::eye(3, 3, CV_32FC1);
-	S.at<float>(0, 0) = scale;
-	S.at<float>(1, 1) = scale;
-	// combine
-	Mat H = R*S*T;
+    // create transformation matrices
+    // translation to origin
+    Mat T = Mat::eye(3, 3, CV_32FC1);
+    T.at<float>(0, 2) = -image.cols/2.0;
+    T.at<float>(1, 2) = -image.rows/2.0;
+    // rotation
+    Mat R = Mat::eye(3, 3, CV_32FC1);
+    R.at<float>(0, 0) =  cos(angle);
+    R.at<float>(0, 1) = -sin(angle);
+    R.at<float>(1, 0) =  sin(angle);
+    R.at<float>(1, 1) =  cos(angle);
+    // scale
+    Mat S = Mat::eye(3, 3, CV_32FC1);
+    S.at<float>(0, 0) = scale;
+    S.at<float>(1, 1) = scale;
+    // combine
+    Mat H = R*S*T;
 
-	// compute corners of warped image
-	Mat corners(1, 4, CV_32FC2);
-	corners.at<Vec2f>(0, 0) = Vec2f(0,0);
-	corners.at<Vec2f>(0, 1) = Vec2f(0,image.rows);
-	corners.at<Vec2f>(0, 2) = Vec2f(image.cols,0);
-	corners.at<Vec2f>(0, 3) = Vec2f(image.cols,image.rows);
-	perspectiveTransform(corners, corners, H);
+    // compute corners of warped image
+    Mat corners(1, 4, CV_32FC2);
+    corners.at<Vec2f>(0, 0) = Vec2f(0,0);
+    corners.at<Vec2f>(0, 1) = Vec2f(0,image.rows);
+    corners.at<Vec2f>(0, 2) = Vec2f(image.cols,0);
+    corners.at<Vec2f>(0, 3) = Vec2f(image.cols,image.rows);
+    perspectiveTransform(corners, corners, H);
 
-	// compute size of resulting image and allocate memory
-	float x_start = min( min( corners.at<Vec2f>(0, 0)[0], corners.at<Vec2f>(0, 1)[0]), min( corners.at<Vec2f>(0, 2)[0], corners.at<Vec2f>(0, 3)[0]) );
-	float x_end   = max( max( corners.at<Vec2f>(0, 0)[0], corners.at<Vec2f>(0, 1)[0]), max( corners.at<Vec2f>(0, 2)[0], corners.at<Vec2f>(0, 3)[0]) );
-	float y_start = min( min( corners.at<Vec2f>(0, 0)[1], corners.at<Vec2f>(0, 1)[1]), min( corners.at<Vec2f>(0, 2)[1], corners.at<Vec2f>(0, 3)[1]) );
-	float y_end   = max( max( corners.at<Vec2f>(0, 0)[1], corners.at<Vec2f>(0, 1)[1]), max( corners.at<Vec2f>(0, 2)[1], corners.at<Vec2f>(0, 3)[1]) );
+    // compute size of resulting image and allocate memory
+    float x_start = min( min( corners.at<Vec2f>(0, 0)[0], corners.at<Vec2f>(0, 1)[0]), min( corners.at<Vec2f>(0, 2)[0], corners.at<Vec2f>(0, 3)[0]) );
+    float x_end   = max( max( corners.at<Vec2f>(0, 0)[0], corners.at<Vec2f>(0, 1)[0]), max( corners.at<Vec2f>(0, 2)[0], corners.at<Vec2f>(0, 3)[0]) );
+    float y_start = min( min( corners.at<Vec2f>(0, 0)[1], corners.at<Vec2f>(0, 1)[1]), min( corners.at<Vec2f>(0, 2)[1], corners.at<Vec2f>(0, 3)[1]) );
+    float y_end   = max( max( corners.at<Vec2f>(0, 0)[1], corners.at<Vec2f>(0, 1)[1]), max( corners.at<Vec2f>(0, 2)[1], corners.at<Vec2f>(0, 3)[1]) );
 
-	// create translation matrix in order to copy new object to image center
-	T.at<float>(0, 0) = 1;
-	T.at<float>(1, 1) = 1;
-	T.at<float>(2, 2) = 1;
-	T.at<float>(0, 2) = (x_end - x_start + 1)/2.0;
-	T.at<float>(1, 2) = (y_end - y_start + 1)/2.0;
+    // create translation matrix in order to copy new object to image center
+    T.at<float>(0, 0) = 1;
+    T.at<float>(1, 1) = 1;
+    T.at<float>(2, 2) = 1;
+    T.at<float>(0, 2) = (x_end - x_start + 1)/2.0;
+    T.at<float>(1, 2) = (y_end - y_start + 1)/2.0;
 
-	// change homography to take necessary translation into account
-	H = T * H;
-	// warp image and copy it to output image
-	Mat output;
-	warpPerspective(image, output, H, Size(x_end - x_start + 1, y_end - y_start + 1), CV_INTER_LINEAR);
+    // change homography to take necessary translation into account
+    H = T * H;
+    // warp image and copy it to output image
+    Mat output;
+    warpPerspective(image, output, H, Size(x_end - x_start + 1, y_end - y_start + 1), CV_INTER_LINEAR);
 
-	return output;
+    return output;
 }
 
 /**
@@ -504,19 +469,19 @@ Mat rotateAndScale(Mat& image, double angle, double scale) {
 */
 Mat makeTestImage(Mat& temp, double angle, double scale, double* scaleRange) {
 
-	// rotate and scale template image
-	Mat small = rotateAndScale(temp, angle, scale);
+    // rotate and scale template image
+    Mat small = rotateAndScale(temp, angle, scale);
 
-	// create empty test image
-	Mat testImage = Mat::zeros(temp.rows*scaleRange[1]*2, temp.cols*scaleRange[1]*2, CV_32FC1);
-	// copy new object into test image
-	Mat tmp;
-	Rect roi;
-	roi = Rect( (testImage.cols - small.cols)*0.5, (testImage.rows - small.rows)*0.5, small.cols, small.rows);
-	tmp = Mat(testImage, roi);
-	small.copyTo(tmp);
+    // create empty test image
+    Mat testImage = Mat::zeros(temp.rows*scaleRange[1]*2, temp.cols*scaleRange[1]*2, CV_32FC1);
+    // copy new object into test image
+    Mat tmp;
+    Rect roi;
+    roi = Rect( (testImage.cols - small.cols)*0.5, (testImage.rows - small.rows)*0.5, small.cols, small.rows);
+    tmp = Mat(testImage, roi);
+    small.copyTo(tmp);
 
-	return testImage;
+    return testImage;
 }
 
 /**
@@ -531,80 +496,80 @@ Mat makeTestImage(Mat& temp, double angle, double scale, double* scaleRange) {
 */
 void plotHoughDetectionResult(Mat& testImage, vector<Mat>& templ, vector<Scalar>& objList, double scaleSteps, double* scaleRange, double angleSteps, double* angleRange) {
 
-	// some matrices to deal with color
-	Mat red = testImage.clone();
-	Mat green = testImage.clone();
-	Mat blue = testImage.clone();
-	Mat tmp = Mat::zeros(testImage.rows, testImage.cols, CV_32FC1);
+    // some matrices to deal with color
+    Mat red = testImage.clone();
+    Mat green = testImage.clone();
+    Mat blue = testImage.clone();
+    Mat tmp = Mat::zeros(testImage.rows, testImage.cols, CV_32FC1);
 
-	// scale and angle of current object
-	double scale, angle;
+    // scale and angle of current object
+    double scale, angle;
 
-	// for all objects
-	for(vector<Scalar>::iterator it = objList.begin(); it != objList.end(); it++) {
+    // for all objects
+    for(vector<Scalar>::iterator it = objList.begin(); it != objList.end(); it++) {
 
-		// compute scale and angle of current object
-		scale = (scaleRange[1] - scaleRange[0])/(scaleSteps-1)*(*it).val[0] + scaleRange[0];
-		angle = ((angleRange[1] - angleRange[0])/(angleSteps)*(*it).val[1] + angleRange[0]);
+        // compute scale and angle of current object
+        scale = (scaleRange[1] - scaleRange[0])/(scaleSteps-1)*(*it).val[0] + scaleRange[0];
+        angle = ((angleRange[1] - angleRange[0])/(angleSteps)*(*it).val[1] + angleRange[0]);
 
-		// use scale and angle in order to generate new binary mask of template
-		Mat binMask = rotateAndScale(templ[0], angle, scale);
+        // use scale and angle in order to generate new binary mask of template
+        Mat binMask = rotateAndScale(templ[0], angle, scale);
 
-		// perform boundary checks
-		Rect binArea = Rect(0, 0, binMask.cols, binMask.rows);
-		Rect imgArea = Rect((*it).val[2]-binMask.cols/2., (*it).val[3]-binMask.rows/2, binMask.cols, binMask.rows);
-		if ((*it).val[2]-binMask.cols/2 < 0) {
-			binArea.x = abs( (*it).val[2]-binMask.cols/2);
-			binArea.width = binMask.cols - binArea.x;
-			imgArea.x = 0;
-			imgArea.width = binArea.width;
-		}
-		if ((*it).val[3]-binMask.rows/2 < 0) {
-			binArea.y = abs( (*it).val[3]-binMask.rows/2);
-			binArea.height = binMask.rows - binArea.y;
-			imgArea.y = 0;
-			imgArea.height = binArea.height;
-		}
-		if ((*it).val[2]-binMask.cols/2 + binMask.cols >= tmp.cols) {
-			binArea.width = binMask.cols - ((*it).val[2]-binMask.cols/2 + binMask.cols - tmp.cols);
-			imgArea.width = binArea.width;
-		}
-		if ((*it).val[3]-binMask.rows/2 + binMask.rows >= tmp.rows) {
-			binArea.height = binMask.rows - ( (*it).val[3]-binMask.rows/2 + binMask.rows - tmp.rows );
-			imgArea.height = binArea.height;
-		}
-		// copy this object instance in new image of correct size
-		tmp.setTo(0);
-		Mat binRoi = Mat(binMask, binArea);
-		Mat imgRoi = Mat(tmp, imgArea);
-		binRoi.copyTo(imgRoi);
+        // perform boundary checks
+        Rect binArea = Rect(0, 0, binMask.cols, binMask.rows);
+        Rect imgArea = Rect((*it).val[2]-binMask.cols/2., (*it).val[3]-binMask.rows/2, binMask.cols, binMask.rows);
+        if ((*it).val[2]-binMask.cols/2 < 0) {
+            binArea.x = abs( (*it).val[2]-binMask.cols/2);
+            binArea.width = binMask.cols - binArea.x;
+            imgArea.x = 0;
+            imgArea.width = binArea.width;
+        }
+        if ((*it).val[3]-binMask.rows/2 < 0) {
+            binArea.y = abs( (*it).val[3]-binMask.rows/2);
+            binArea.height = binMask.rows - binArea.y;
+            imgArea.y = 0;
+            imgArea.height = binArea.height;
+        }
+        if ((*it).val[2]-binMask.cols/2 + binMask.cols >= tmp.cols) {
+            binArea.width = binMask.cols - ((*it).val[2]-binMask.cols/2 + binMask.cols - tmp.cols);
+            imgArea.width = binArea.width;
+        }
+        if ((*it).val[3]-binMask.rows/2 + binMask.rows >= tmp.rows) {
+            binArea.height = binMask.rows - ( (*it).val[3]-binMask.rows/2 + binMask.rows - tmp.rows );
+            imgArea.height = binArea.height;
+        }
+        // copy this object instance in new image of correct size
+        tmp.setTo(0);
+        Mat binRoi = Mat(binMask, binArea);
+        Mat imgRoi = Mat(tmp, imgArea);
+        binRoi.copyTo(imgRoi);
 
-		// delete found object from original image in order to reset pixel values with red (which are white up until now)
-		binMask = 1 - binMask;
-		imgRoi = Mat(red, imgArea);
-		multiply(imgRoi, binRoi, imgRoi);
-		imgRoi = Mat(green, imgArea);
-		multiply(imgRoi, binRoi, imgRoi);
-		imgRoi = Mat(blue, imgArea);
-		multiply(imgRoi, binRoi, imgRoi);
+        // delete found object from original image in order to reset pixel values with red (which are white up until now)
+        binMask = 1 - binMask;
+        imgRoi = Mat(red, imgArea);
+        multiply(imgRoi, binRoi, imgRoi);
+        imgRoi = Mat(green, imgArea);
+        multiply(imgRoi, binRoi, imgRoi);
+        imgRoi = Mat(blue, imgArea);
+        multiply(imgRoi, binRoi, imgRoi);
 
-		// change red channel
-		red = red + tmp*255;
-	}
+        // change red channel
+        red = red + tmp*255;
+    }
 
-	// generate color image
-	vector<Mat> color;
-	color.push_back(blue);
-	color.push_back(green);
-	color.push_back(red);
-	Mat display;
-	merge(color, display);
+    // generate color image
+    vector<Mat> color;
+    color.push_back(blue);
+    color.push_back(green);
+    color.push_back(red);
+    Mat display;
+    merge(color, display);
 
-	// display color image
-	showImage(display, "result", 0);
+    // display color image
+    showImage(display, "result", 0);
 
-	// save color image
-	imwrite("detectionResult.png", display);
+    // save color image
+    imwrite("detectionResult.png", display);
 }
 
 /**
@@ -616,74 +581,74 @@ void plotHoughDetectionResult(Mat& testImage, vector<Mat>& templ, vector<Scalar>
 */
 void findHoughMaxima(vector< vector<Mat> >& houghSpace, double objThresh, vector<Scalar>& objList) {
 
-	// get maxima over scales and angles
-	Mat maxImage = Mat::zeros(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1 );
-	for (vector< vector<Mat> >::iterator it = houghSpace.begin(); it != houghSpace.end(); it++) {
-		for (vector<Mat>::iterator img = (*it).begin(); img != (*it).end(); img++) {
-			max(*img, maxImage, maxImage);
-		}
-	}
-	// get global maxima
-	double min, max;
-	minMaxLoc(maxImage, &min, &max);
+    // get maxima over scales and angles
+    Mat maxImage = Mat::zeros(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1 );
+    for (vector< vector<Mat> >::iterator it = houghSpace.begin(); it != houghSpace.end(); it++) {
+        for (vector<Mat>::iterator img = (*it).begin(); img != (*it).end(); img++) {
+            max(*img, maxImage, maxImage);
+        }
+    }
+    // get global maxima
+    double min, max;
+    minMaxLoc(maxImage, &min, &max);
 
-	// define threshold
-	double threshold = objThresh * max;
+    // define threshold
+    double threshold = objThresh * max;
 
-	// spatial non-maxima suppression
-	Mat bin = Mat(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1, -1);
-	for (int y=0; y<maxImage.rows; y++) {
-		for (int x=0; x<maxImage.cols; x++) {
-			// init
-			bool localMax = true;
-			// check neighbors
-			for (int i=-1; i<=1; i++) {
-				int new_y = y + i;
-				if ((new_y < 0) or (new_y >= maxImage.rows)) {
-					continue;
-				}
-				for (int j=-1; j<=1; j++) {
-					int new_x = x + j;
-					if ((new_x < 0) or (new_x >= maxImage.cols)) {
-						continue;
-					}
-					if (maxImage.at<float>(new_y, new_x) > maxImage.at<float>(y, x)) {
-						localMax = false;
-						break;
-					}
-				}
-				if (!localMax) {
-					break;
-				}
-			}
-			// check if local max is larger than threshold
-			if ((localMax) and (maxImage.at<float>(y, x) > threshold)) {
-				bin.at<float>(y, x) = maxImage.at<float>(y, x);
-			}
-		}
-	}
+    // spatial non-maxima suppression
+    Mat bin = Mat(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1, -1);
+    for (int y=0; y<maxImage.rows; y++) {
+        for (int x=0; x<maxImage.cols; x++) {
+            // init
+            bool localMax = true;
+            // check neighbors
+            for (int i=-1; i<=1; i++) {
+                int new_y = y + i;
+                if ((new_y < 0) or (new_y >= maxImage.rows)) {
+                    continue;
+                }
+                for (int j=-1; j<=1; j++) {
+                    int new_x = x + j;
+                    if ((new_x < 0) or (new_x >= maxImage.cols)) {
+                        continue;
+                    }
+                    if (maxImage.at<float>(new_y, new_x) > maxImage.at<float>(y, x)) {
+                        localMax = false;
+                        break;
+                    }
+                }
+                if (!localMax) {
+                    break;
+                }
+            }
+            // check if local max is larger than threshold
+            if ((localMax) and (maxImage.at<float>(y, x) > threshold)) {
+                bin.at<float>(y, x) = maxImage.at<float>(y, x);
+            }
+        }
+    }
 
-	// loop through hough space after non-max suppression and add objects to object list
-	double scale, angle;
-	scale = 0;
-	for (vector< vector<Mat> >::iterator it = houghSpace.begin(); it != houghSpace.end(); it++, scale++) {
-		angle = 0;
-		for (vector<Mat>::iterator img = (*it).begin(); img != (*it).end(); img++, angle++) {
-			for (int y=0; y<bin.rows; y++) {
-				for (int x=0; x<bin.cols; x++) {
-					if ((*img).at<float>(y, x) == bin.at<float>(y, x)) {
-						// create object list entry consisting of scale, angle, and position where object was detected
-						Scalar cur;
-						cur.val[0] = scale;
-						cur.val[1] = angle;
-						cur.val[2] = x;
-						cur.val[3] = y;
-						objList.push_back(cur);
-					}
-				}
-			}
-		}
-	}
+    // loop through hough space after non-max suppression and add objects to object list
+    double scale, angle;
+    scale = 0;
+    for (vector< vector<Mat> >::iterator it = houghSpace.begin(); it != houghSpace.end(); it++, scale++) {
+        angle = 0;
+        for (vector<Mat>::iterator img = (*it).begin(); img != (*it).end(); img++, angle++) {
+            for (int y=0; y<bin.rows; y++) {
+                for (int x=0; x<bin.cols; x++) {
+                    if ((*img).at<float>(y, x) == bin.at<float>(y, x)) {
+                        // create object list entry consisting of scale, angle, and position where object was detected
+                        Scalar cur;
+                        cur.val[0] = scale;
+                        cur.val[1] = angle;
+                        cur.val[2] = x;
+                        cur.val[3] = y;
+                        objList.push_back(cur);
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -694,25 +659,25 @@ dur	wait number of ms or until key is pressed
 */
 void showImage(Mat& img, string win, double dur) {
 
-	// use copy for normalization
-	Mat tempDisplay;
-	if (img.channels() == 1) {
-		normalize(img, tempDisplay, 0, 255, CV_MINMAX);
-	} else {
-		tempDisplay = img.clone();
-	}
+    // use copy for normalization
+    Mat tempDisplay;
+    if (img.channels() == 1) {
+        normalize(img, tempDisplay, 0, 255, CV_MINMAX);
+    } else {
+        tempDisplay = img.clone();
+    }
 
-	tempDisplay.convertTo(tempDisplay, CV_8UC1);
+    tempDisplay.convertTo(tempDisplay, CV_8UC1);
 
-	// create window and display omage
-	namedWindow( win.c_str(), 0);
-	imshow(win.c_str(), tempDisplay);
-	// wait
-	if (dur >= 0) {
-		cvWaitKey(dur);
-	}
-	// be tidy
-	destroyWindow(win.c_str());
+    // create window and display omage
+    namedWindow( win.c_str(), 0);
+    imshow(win.c_str(), tempDisplay);
+    // wait
+    if (dur >= 0) {
+        cvWaitKey(dur);
+    }
+    // be tidy
+    destroyWindow(win.c_str());
 }
 
 /**
@@ -724,32 +689,32 @@ dy	shift in y-direction
 */
 void circShift(Mat& in, Mat& out, int dx, int dy) {
 
-	Mat tmp = Mat::zeros(in.rows, in.cols, in.type());
+    Mat tmp = Mat::zeros(in.rows, in.cols, in.type());
 
-	int x, y, new_x, new_y;
+    int x, y, new_x, new_y;
 
-	for (y=0; y<in.rows; y++) {
-		// calulate new y-coordinate
-		new_y = y + dy;
-		if (new_y < 0) {
-			new_y = new_y + in.rows;
-		}
-		if (new_y>=in.rows) {
-			new_y = new_y - in.rows;
-		}
+    for (y=0; y<in.rows; y++) {
+        // calulate new y-coordinate
+        new_y = y + dy;
+        if (new_y < 0) {
+            new_y = new_y + in.rows;
+        }
+        if (new_y>=in.rows) {
+            new_y = new_y - in.rows;
+        }
 
-		for (x=0; x<in.cols; x++) {
-			// calculate new x-coordinate
-			new_x = x + dx;
-			if (new_x < 0) {
-				new_x = new_x + in.cols;
-			}
-			if (new_x >= in.cols) {
-				new_x = new_x - in.cols;
-			}
+        for (x=0; x<in.cols; x++) {
+            // calculate new x-coordinate
+            new_x = x + dx;
+            if (new_x < 0) {
+                new_x = new_x + in.cols;
+            }
+            if (new_x >= in.cols) {
+                new_x = new_x - in.cols;
+            }
 
-			tmp.at<Vec2f>(new_y, new_x) = in.at<Vec2f>(y, x);
-		}
-	}
-	out = tmp;
+            tmp.at<Vec2f>(new_y, new_x) = in.at<Vec2f>(y, x);
+        }
+    }
+    out = tmp;
 }
