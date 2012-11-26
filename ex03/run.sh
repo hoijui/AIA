@@ -25,7 +25,7 @@ cd "${TARGET_DIR}"
 
 ARGUMENTS="${RESOURCES_DIR}/img/testTemplate.png"
 if [ "${1}" = "real" ]; then
-	ARGUMENTS="${RESOURCES_DIR}/img/moneyTemplate100.jpg" "${RESOURCES_DIR}/img/poker.jpg"
+	export ARGUMENTS="${RESOURCES_DIR}/img/moneyTemplate100.jpg ${RESOURCES_DIR}/img/poker.jpg"
 fi
 
 if [ "${2}" = "debug" ]; then
