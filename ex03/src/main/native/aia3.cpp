@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     }
 
     // show test image
-//	showImage(testImage, "testImage", 0);
+	showImage(testImage, "testImage", 0);
 
     // calculate directional gradient of test image as complex numbers (two channel image)
     Mat gradImage = calcDirectionalGrad(testImage, sigma);
@@ -152,7 +152,7 @@ void plotHough(vector< vector<Mat> >& houghSpace) {
 
     // TODO
 
-    Mat houghImage(houghSpace.at(0).at(0).cols, houghSpace.at(0).at(0).rows, CV_32FC1);
+    Mat houghImage(houghSpace.at(0).at(0).rows, houghSpace.at(0).at(0).cols, CV_32FC1);
 
     for (int i = 0; i < houghSpace.size(); ++i) {
         for (int j = 0; j < houghSpace.at(i).size(); ++j) {
@@ -205,7 +205,7 @@ void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftM
     complGrad /= magnitudeSum;
 
     //multiply to get object mask, insert directly into padded mask
-    Mat bigMask = Mat::zeros(fftMask.cols,fftMask.rows,CV_32FC2);
+    Mat bigMask = Mat::zeros(fftMask.rows, fftMask.cols, CV_32FC2);
     for(int i = 0; i < binMask.cols; i++)
     {
         for(int j = 0; j < binMask.rows; j++)
@@ -277,10 +277,10 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
     double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
     double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
 
-    Mat imgFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+    Mat imgFMask(gradImage.rows, gradImage.cols, CV_32FC2);
     dft(gradImage, imgFMask, DFT_COMPLEX_OUTPUT);
 
-    Mat objFMask(gradImage.cols, gradImage.rows, CV_32FC2);
+    Mat objFMask(gradImage.rows, gradImage.cols, CV_32FC2);
 
     for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
         double scale = scaleRange[0] + (scaleI * scaleStep);
@@ -292,7 +292,7 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
             // create scaled and rotated template gradient image
             makeFFTObjectMask(templ, scale, angle, objFMask) ;
 
-            Mat complexHough = Mat::zeros(imgFMask.cols,imgFMask.rows,imgFMask.type());
+            Mat complexHough = Mat::zeros(imgFMask.rows, imgFMask.cols, imgFMask.type());
             mulSpectrums(imgFMask,objFMask,complexHough,
                          0,//no flags
                          true //conjugate objFMask before multiplication
@@ -328,7 +328,7 @@ vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double template
     // create x-axis
     Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
-    Mat binaryEdges(complexGradients.cols, complexGradients.rows, CV_32FC1);
+    Mat binaryEdges(complexGradients.rows, complexGradients.cols, CV_32FC1);
     for (int i = 0; i < complexGradients.cols; ++i) {
         for (int j = 0; j < complexGradients.rows; ++j) {
             float realP = complexGradients.at<Vec2f>(i, j)[0];
