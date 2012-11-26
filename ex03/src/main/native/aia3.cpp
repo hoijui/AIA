@@ -106,20 +106,25 @@ int main(int argc, char** argv) {
     }
 
     // show test image
-	showImage(testImage, "testImage", 0);
+    cout << "main: Showing test image." << endl;
+    showImage(testImage, "testImage", 0);
 
     // calculate directional gradient of test image as complex numbers (two channel image)
+    cout << "main: Calculating directional gradient." << endl;
     Mat gradImage = calcDirectionalGrad(testImage, sigma);
 
     // generate template from template image
     // templ[0] == binary image
     // templ[0] == directional gradient image
+    cout << "main: Calculating object template." << endl;
     vector<Mat> templ = makeObjectTemplate(templateImage, sigma, templateThresh);
 
     // show binary image
+    cout << "main: Showing binary part of template." << endl;
     showImage(templ[0], "Binary part of template", 0);
 
     // perfrom general hough transformation
+    cout << "main: Generating hough space." << endl;
     vector< vector<Mat> > houghSpace = generalHough(gradImage, templ, scaleSteps, scaleRange, angleSteps, angleRange);
 
     // plot hough space (max over angle- and scale-dimension)
@@ -326,16 +331,23 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
     // create x-axis
+    cout << 0 << endl;
     Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
-    Mat binaryEdges(complexGradients.rows, complexGradients.cols, CV_32FC1);
-    for (int i = 0; i < complexGradients.cols; ++i) {
-        for (int j = 0; j < complexGradients.rows; ++j) {
-            float realP = complexGradients.at<Vec2f>(i, j)[0];
-            float complexP = complexGradients.at<Vec2f>(i, j)[1];
-            binaryEdges.at<float>(i, j) = sqrt(realP*realP + complexP*complexP);
+    Mat complGrad = complexGradients.clone();
+
+    cout << 1 << endl;
+    Mat binaryEdges = Mat::zeros(complGrad.rows,complGrad.cols,CV_32FC1);
+    for(int i = 0; i < complGrad.cols; i++)
+    {
+        for(int j = 0; j < complGrad.rows; j++)
+        {
+            float re = complGrad.at<Vec2f>(i,j)[0];
+            float im = complGrad.at<Vec2f>(i,j)[1];
+            binaryEdges.at<float>(i,j) = sqrt(pow(re,2)+pow(im,2));
         }
     }
+    cout << 2 << endl;
     float maxGrad = 0.0f;
     for (int i = 0; i < binaryEdges.cols; ++i) {
         for (int j = 0; j < binaryEdges.rows; ++j) {
@@ -344,15 +356,19 @@ vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double template
             }
         }
     }
+    cout << 3 << endl;
     float threshhold = templateThresh * maxGrad;
+    cout << 3.5 << endl;
     threshold(binaryEdges, binaryEdges, threshhold,
               255, //set all points meeting the threshold to 255
               THRESH_BINARY //output is a binary image
               );
 
+    cout << 4 << endl;
     vector<Mat> res;
     res.push_back(binaryEdges);
-    res.push_back(complexGradients);
+    res.push_back(complGrad);
+    cout << 5 << endl;
     return res;
 }
 
