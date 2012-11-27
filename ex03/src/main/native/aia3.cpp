@@ -225,41 +225,6 @@ void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftM
     dft(bigMask,fftMask,DFT_COMPLEX_OUTPUT);
 }
 
-
-static Vec2f calcCenterOfGravity(const vector<Mat>& templ) {
-
-    Vec2f center(0.0f, 0.0f);
-    int contourPoints = 0;
-    for (int i = 0; i < templ[0].cols; ++i) {
-        for (int j = 0; j < templ[0].rows; ++j) {
-            if (templ[0].at<float>(i, j) > 0.0f) {
-                center += Vec2f(i, j);
-                contourPoints++;
-            }
-        }
-    }
-    center[0] = center[0] / contourPoints;
-    center[1] = center[1] / contourPoints;
-
-    return center;
-}
-
-static vector< vector<Vec2f> > calcRTable(const vector<Mat>& templ, const Vec2f& center) {
-
-    vector< vector<Vec2f> > rTable;
-    // TODO ?
-    return rTable;
-}
-
-static void complexConj(Mat& complexMat) {
-
-    for (int i = 0; i < complexMat.cols; ++i) {
-        for (int j = 0; j < complexMat.rows; ++j) {
-            complexMat.at<Vec2f>(i, j)[1] *= -1;
-        }
-    }
-}
-
 /**
   computes the hough space of the general hough transform
   gradImage:	the gradient image of the test image
@@ -276,9 +241,6 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 
     vector< vector<Mat> > res;
 
-    Vec2f center = calcCenterOfGravity(templ);
-    vector< vector<Vec2f> > rTable = calcRTable(templ, center);
-
     double scaleStep = (scaleRange[1] - scaleRange[0]) / scaleSteps;
     double angleStep = (angleRange[1] - angleRange[0]) / angleSteps;
 
@@ -289,7 +251,6 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 
     for (int scaleI = 0; scaleI < (int)scaleSteps; ++scaleI) {
         double scale = scaleRange[0] + (scaleI * scaleStep);
-        //res.push_back(vector<Mat>());
         vector<Mat> angleRes;
         for (int angleI = 0; angleI < (int)angleSteps; ++angleI) {
             double angle = angleRange[0] + (angleI * angleStep);
