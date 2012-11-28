@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
         scaleSteps = 32; // TODO
         scaleRange[0] = 0.5; // TODO
         scaleRange[1] = 2.0; // TODO
-        angleSteps = 180; // TODO
+        angleSteps = 4; // TODO
         angleRange[0] = 0;
         angleRange[1] = 2*CV_PI;
         // load it
@@ -188,39 +188,39 @@ void makeFFTObjectMask(vector<Mat>& templ, double scale, double angle, Mat& fftM
     binMask = rotateAndScale(binMask,angle,scale);
     complGrad = rotateAndScale(complGrad,angle,scale);
 
-    //correction of the phase shift
+    // correction of the phase shift
     float imRot = sin(angle);
     float reRot = cos(angle);
-    //summation of magnitudes of the complex gradient
+    // summation of magnitudes of the complex gradient
     float magnitudeSum = 0.0f;
     for(int i = 0; i < complGrad.cols; i++)
     {
         for(int j = 0; j < complGrad.rows; j++)
         {
-            float re = complGrad.at<Vec2f>(i,j)[0];
-            float im = complGrad.at<Vec2f>(i,j)[1];
-            complGrad.at<Vec2f>(i,j)[0] = re * reRot + im * imRot;
-            complGrad.at<Vec2f>(i,j)[1] = im * reRot - re * imRot;
+            float re = complGrad.at<Vec2f>(j,i)[0];
+            float im = complGrad.at<Vec2f>(j,i)[1];
+            complGrad.at<Vec2f>(j,i)[0] = re * reRot + im * imRot;
+            complGrad.at<Vec2f>(j,i)[1] = im * reRot - re * imRot;
 
-            magnitudeSum += sqrt(pow(complGrad.at<Vec2f>(i,j)[0],2)+pow(complGrad.at<Vec2f>(i,j)[1],2));
+            magnitudeSum += sqrt(pow(complGrad.at<Vec2f>(j,i)[0],2)+pow(complGrad.at<Vec2f>(j,i)[1],2));
         }
     }
 
-    //retain scale invariance
+    // retain scale invariance
     complGrad /= magnitudeSum;
 
-    //multiply to get object mask, insert directly into padded mask
+    // multiply to get object mask, insert directly into padded mask
     Mat bigMask = Mat::zeros(fftMask.rows, fftMask.cols, CV_32FC2);
     for(int i = 0; i < binMask.cols; i++)
     {
         for(int j = 0; j < binMask.rows; j++)
         {
-            bigMask.at<Vec2f>(i,j)[0] = binMask.at<float>(i,j)*complGrad.at<Vec2f>(i,j)[0];
-            bigMask.at<Vec2f>(i,j)[1] = binMask.at<float>(i,j)*complGrad.at<Vec2f>(i,j)[1];
+            bigMask.at<Vec2f>(j,i)[0] = binMask.at<float>(j,i)*complGrad.at<Vec2f>(j,i)[0];
+            bigMask.at<Vec2f>(j,i)[1] = binMask.at<float>(j,i)*complGrad.at<Vec2f>(j,i)[1];
         }
     }
 
-    //circular shift
+    // circular shift
     circShift(bigMask,bigMask,-binMask.cols/2,-binMask.rows/2);
     dft(bigMask,fftMask,DFT_COMPLEX_OUTPUT);
 }
@@ -260,18 +260,18 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 
             Mat complexHough = Mat::zeros(imgFMask.rows, imgFMask.cols, imgFMask.type());
             mulSpectrums(imgFMask,objFMask,complexHough,
-                         0,//no flags
-                         true //conjugate objFMask before multiplication
+                         0, // no flags
+                         true // conjugate objFMask before multiplication
                          );
-            //now do the inverse dft
+            // now do the inverse dft
             dft(complexHough,complexHough,DFT_INVERSE | DFT_SCALE);
 
             // get rid of the phase
             Mat hough(complexHough.cols, complexHough.rows, CV_32FC1);
             for (int i = 0; i < complexHough.cols; ++i) {
                 for (int j = 0; j < complexHough.rows; ++j) {
-                    hough.at<float>(i, j) = abs(complexHough.at<Vec2f>(i, j)[0]);
-                    //hough.at<float>(i,j) = sqrt(pow(complexHough.at<Vec2f>(i, j)[0],2)+pow(complexHough.at<Vec2f>(i, j)[1],2));
+                    hough.at<float>(j, i) = abs(complexHough.at<Vec2f>(j, i)[0]);
+                    //hough.at<float>(j,i) = sqrt(pow(complexHough.at<Vec2f>(i, j)[0],2)+pow(complexHough.at<Vec2f>(i, j)[1],2));
                 }
             }
             angleRes.push_back(hough);
@@ -292,44 +292,38 @@ vector< vector<Mat> > generalHough(Mat& gradImage, vector<Mat>& templ, double sc
 vector<Mat> makeObjectTemplate(Mat& templateImage, double sigma, double templateThresh) {
 
     // create x-axis
-    cout << 0 << endl;
     Mat complexGradients = calcDirectionalGrad(templateImage, sigma);
 
     Mat complGrad = complexGradients.clone();
 
-    cout << 1 << endl;
-    Mat binaryEdges = Mat::zeros(complGrad.rows,complGrad.cols,CV_32FC1);
+    Mat binaryEdges = Mat::zeros(complGrad.rows, complGrad.cols, CV_32FC1);
     for(int i = 0; i < complGrad.cols; i++)
     {
         for(int j = 0; j < complGrad.rows; j++)
         {
-            float re = complGrad.at<Vec2f>(i,j)[0];
-            float im = complGrad.at<Vec2f>(i,j)[1];
-            binaryEdges.at<float>(i,j) = sqrt(pow(re,2)+pow(im,2));
+            float re = complGrad.at<Vec2f>(j,i)[0];
+            float im = complGrad.at<Vec2f>(j,i)[1];
+            binaryEdges.at<float>(j,i) = sqrt(pow(re,2)+pow(im,2));
         }
     }
-    cout << 2 << endl;
     float maxGrad = 0.0f;
     for (int i = 0; i < binaryEdges.cols; ++i) {
         for (int j = 0; j < binaryEdges.rows; ++j) {
-            if (binaryEdges.at<float>(i, j) > maxGrad) {
-                maxGrad = binaryEdges.at<float>(i, j);
+            if (binaryEdges.at<float>(j, i) > maxGrad) {
+                maxGrad = binaryEdges.at<float>(j, i);
             }
         }
     }
-    cout << 3 << endl;
     float threshhold = templateThresh * maxGrad;
-    cout << 3.5 << endl;
     threshold(binaryEdges, binaryEdges, threshhold,
               255, //set all points meeting the threshold to 255
               THRESH_BINARY //output is a binary image
               );
 
-    cout << 4 << endl;
     vector<Mat> res;
     res.push_back(binaryEdges);
     res.push_back(complGrad);
-    cout << 5 << endl;
+
     return res;
 }
 
