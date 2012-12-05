@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
     } else {
         // if there was a second file specified
         sigma = 1;
-        templateThresh = 0.7; // TODO
-        objThresh = 0.2; // TODO
+        templateThresh = 0.33; // TODO
+        objThresh = 0.56; // TODO
         scaleSteps = 32; // TODO
         scaleRange[0] = 0.5; // TODO
         scaleRange[1] = 2.0; // TODO
