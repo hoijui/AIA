@@ -48,14 +48,14 @@
 }
 
 \newcommand{\generatedImgRoot}{../../../target}
-\newcommand{\targetFlag}{test_} %leeres Feld: Originalbilder, ``test_``-Feld: Testbilder
+\newcommand{\targetFlag}{} %leeres Feld: Originalbilder, ``test_``-Feld: Testbilder
 \newcommand{\ssigma}{1} %standard deviation of directional gradient kernel
-\newcommand{\templateThresh}{0.7} %relative threshold for binarization of the template image
-\newcommand{\objThresh}{0.2} %relative threshold for maxima in hough space
+\newcommand{\templateThresh}{0.33} %relative threshold for binarization of the template image
+\newcommand{\objThresh}{0.56} %relative threshold for maxima in hough space
 \newcommand{\scaleSteps}{32} %scale resolution in terms of number of scales to be investigated
 \newcommand{\scaleRangeMin}{0.5} %scale of angles [min, max]
 \newcommand{\scaleRangeMax}{2} %scale of angles [min, max]
-\newcommand{\angleSteps}{180} %angle resolution in terms of number of angles to be investigated
+\newcommand{\angleSteps}{4} %angle resolution in terms of number of angles to be investigated
 \newcommand{\angleRangeMin}{0} %range of angles [min, max)
 \newcommand{\angleRangeMax}{2*\pi} %range of angles [min, max)
 
@@ -144,12 +144,7 @@ the correlation is measured in the fourier space as can be seen in the following
 \begin{align}
 H_G(x,y,\theta,s) = |\Re\{(O^I(x,y)O^B(x,y))\odot I^I(x,y)\}|
 \end{align}
-But before we are able to process this, we still have to do some preparation steps.\\
-Firstly, we...\\
-Secondly, we...\\
-Thirdly, we...\\
 Those fourier correlations are built for different scales and different rotations.\\
-It was done for...\\
 In order to visualize the interim result, the Hough space is prepared in the following way:
 They were summed up all together.
 In fig. \ref{fig:\generatedImgRoot/\targetFlag8_Hough.png} one can see the interim result.
@@ -160,13 +155,9 @@ In fig. \ref{fig:\generatedImgRoot/\targetFlag8_Hough.png} one can see the inter
 Those magnitudes do not stand for a certain object all together. 
 A relative threshold ensures that only the greatest ones are detected as object centers.
 In our implementation it was set to \objThresh.
-In the following fig. \ref{fig:\generatedImgRoot/\targetFlag9_maxHough.png},
-one can see the detected maxima that stand each for a object center.
-
-\image{\generatedImgRoot/\targetFlag9_maxHough.png}{0.4}{%
-		Maxima points in the Hough Space (\emph{identified object centers}).}
-
-Here, one can see that five 100 dollar notes are detected by our algorithm.
+Here, one can see a greyscale picture. The brighter each of the image positions,
+the greater is the chance, that this position is representing an object center.
+With our set of parameters, one can see that six 100 dollar notes are detected by our algorithm.
 All in all, there have been seven possible ones, which were all in all very difficult
 to detect, even for humans.
 
@@ -176,7 +167,7 @@ In the following, one can see the result of the working process of our algorithm
 In fig. \ref{fig:\generatedImgRoot/\targetFlag10_result.png}, 
 it should become visible, that those objects detected object have been detected correctly.
 
-\image{\generatedImgRoot/\targetFlag10_result.png}{0.4}{%
+\image{\generatedImgRoot/\targetFlag10_result.png}{0.7}{%
 		Output picture (\emph{identified objects in red}).}
 
 \newpage

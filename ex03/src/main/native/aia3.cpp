@@ -34,6 +34,8 @@ usage:
   first case (testing): aia3 <path to template>
   second case (application): aia3 <path to template> <path to testimage>
 */
+    String g_test_flag;                 // indicates weather a test runs or not
+
 int main(int argc, char** argv) {
 
     // check if image paths were defined
@@ -83,6 +85,7 @@ int main(int argc, char** argv) {
         angleRange[1] = 2*CV_PI;
         // generate test image
         testImage = makeTestImage(templateImage, testAngle, testScale, scaleRange);
+        g_test_flag="test_";
     } else {
         // if there was a second file specified
         sigma = 1;
@@ -102,6 +105,7 @@ int main(int argc, char** argv) {
         }
         // and convert it from 8U to 32F
         inputImage.convertTo(testImage, CV_32FC1);
+        g_test_flag="";
     }
 
     // show test image
@@ -111,6 +115,33 @@ int main(int argc, char** argv) {
     // calculate directional gradient of test image as complex numbers (two channel image)
     cout << "main: Calculating directional gradient." << endl;
     Mat gradImage = calcDirectionalGrad(testImage, sigma);
+    // erstelle grau-Bild vom Image zum Speichern für die Doku
+    Mat re_gradImage(gradImage.rows,gradImage.cols,CV_32FC1); 
+    Mat im_gradImage(gradImage.rows,gradImage.cols,CV_32FC1);
+    double remax=0; double remin=0; double immax=0; double immin=0;
+    for (int x = 0; x < gradImage.cols; ++x) {
+        for (int y = 0; y < gradImage.rows; ++y) {
+            re_gradImage.at<float>(y,x)=gradImage.at<Vec2f>(y,x)[0];
+            im_gradImage.at<float>(y,x)=gradImage.at<Vec2f>(y,x)[1];
+            if (gradImage.at<Vec2f>(y,x)[0]>remax){
+                remax=gradImage.at<Vec2f>(y,x)[0];
+            }
+            if (gradImage.at<Vec2f>(y,x)[0]<remin){
+                remin=gradImage.at<Vec2f>(y,x)[0];
+            }
+            if (gradImage.at<Vec2f>(y,x)[1]>immax){
+                immax=gradImage.at<Vec2f>(y,x)[1];
+            }
+            if (gradImage.at<Vec2f>(y,x)[1]<immin){
+                immin=gradImage.at<Vec2f>(y,x)[1];
+            }
+        }
+    }
+    cout << "main: Showing real grad part of input image." << endl;
+    showImage(re_gradImage, "real grad part of input image", 1);
+    showImage(im_gradImage, "immaginary grad part of input image", 1);
+    imwrite(g_test_flag+"6_ImageIreal.png", (re_gradImage-remin)/(remax-remin)*255); 
+    imwrite(g_test_flag+"7_ImageIimag.png", (im_gradImage-immin)/(remax-remin)*255); 
 
     // generate template from template image
     // templ[0] == binary image
@@ -121,6 +152,34 @@ int main(int argc, char** argv) {
     // show binary image
     cout << "main: Showing binary part of template." << endl;
     showImage(templ[0], "Binary part of template", 0);
+    imwrite(g_test_flag+"5_ObjectB.png", templ[0]);
+
+    //erstelle grau-Bild vom Template zum Speichern für die Doku
+    Mat re_gradObj(templ[0].rows,templ[0].cols,CV_32FC1); 
+    Mat im_gradObj(templ[0].rows,templ[0].cols,CV_32FC1);
+    for (int x = 0; x < templ[0].cols; ++x) {
+        for (int y = 0; y < templ[0].rows; ++y) {
+            re_gradObj.at<float>(y,x)=templ[1].at<Vec2f>(y,x)[0];
+            im_gradObj.at<float>(y,x)=templ[1].at<Vec2f>(y,x)[1];
+            if (templ[1].at<Vec2f>(y,x)[0]>remax){
+                remax=templ[1].at<Vec2f>(y,x)[0];
+            }
+            if (templ[1].at<Vec2f>(y,x)[0]<remin){
+                remin=templ[1].at<Vec2f>(y,x)[0];
+            }
+            if (templ[1].at<Vec2f>(y,x)[1]>immax){
+                immax=templ[1].at<Vec2f>(y,x)[1];
+            }
+            if (templ[1].at<Vec2f>(y,x)[1]<immin){
+                immin=templ[1].at<Vec2f>(y,x)[1];
+            }
+        }
+    }
+    cout << "main: Showing real grad part of template." << endl;
+    showImage(re_gradObj, "real grad part of template", 0);
+    showImage(im_gradObj, "immaginary grad part of template", 0);
+    imwrite(g_test_flag+"3_ObjectIreal.png", (re_gradObj-remin)/(remax-remin)*255); 
+    imwrite(g_test_flag+"4_ObjectIimag.png", (im_gradObj-remin)/(remax-remin)*255); 
 
     // perfrom general hough transformation
     cout << "main: Generating hough space." << endl;
@@ -168,6 +227,7 @@ void plotHough(vector< vector<Mat> >& houghSpace) {
     }
     normalize(houghImage, houghImage, 0, 1, CV_MINMAX);
     showImage(houghImage, "Hough Space", 0);
+    imwrite(g_test_flag+"8_Hough.png", houghImage*255);
 }
 
 /**
@@ -530,7 +590,7 @@ void plotHoughDetectionResult(Mat& testImage, vector<Mat>& templ, vector<Scalar>
     showImage(display, "result", 0);
 
     // save color image
-    imwrite("detectionResult.png", display);
+    imwrite(g_test_flag+"10_result.png", display);
 }
 
 /**
