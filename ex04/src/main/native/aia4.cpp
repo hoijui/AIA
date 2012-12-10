@@ -193,7 +193,12 @@ int main(int argc, char** argv) {
 */
 vector< Mat > bayes(vector< Mat >& likeli, vector< float >& classPrior) {
 
+	vector<Mat> posterior;
+
 	// TODO
+	;
+
+	return posterior;
 }
 
 /* ***********************
@@ -307,6 +312,7 @@ vector<Mat> calculateFeatures(Mat& image) {
 	normRGB(image, features);
 	// calculate HSV
 	// hsv(image, features);
+	// TODO
 
 	return features;
 }
