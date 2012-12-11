@@ -195,8 +195,17 @@ vector< Mat > bayes(vector< Mat >& likeli, vector< float >& classPrior) {
 
 	vector<Mat> posterior;
 
-	// TODO
-	;
+	// calculate p(x), by integrating (in practise: summing) over the classes
+	Mat evidence = likeli.at(0).clone() * classPrior.at(0);
+	for (int i = 1; i < likeli.size(); ++i) {
+		evidence += likeli.at(i) * classPrior.at(i);
+	}
+
+	// calculate P(c|x) for each x_i (one image), and then adding together
+	for (int i = 0; i < likeli.size(); ++i) {
+		Mat posterior_i = likeli.at(i) * classPrior.at(i) / evidence;
+		posterior.push_back(posterior_i);
+	}
 
 	return posterior;
 }
