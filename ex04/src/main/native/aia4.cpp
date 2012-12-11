@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 	   *****************************************  */
 	// NOTE: This parameters have to be adapted to the actual classification problem!
 	// number of classes
-	int numberOfClasses = 4;
+	int numberOfClasses = 2;
 
 	if (numberOfClasses != argc-3) {
 		cerr << "Number of classes doesn't match number of arguments, i.e. number of reference images" << endl;
