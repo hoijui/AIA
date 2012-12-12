@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{listings}
+\usepackage{subfigure} 
 
 % define style of numbering
 \numberwithin{equation}{section} % use separate numbering per section
@@ -17,12 +18,12 @@
 
 \title{Naive Bayes}
 \subtitle{Excercise 4 \\ Automatic Image Analysis - WS12/13}
-\author{\textbf{Team E}: Marcus Grum (340733), Robin Vobruba (343773), \\ Robert Koppisch (214168), Nicolas Brieger (318599)}
+\author{\textbf{Team E}: Marcus Grum (340733), Robin Vobruba (343773), \\ Robert Koppisch (214168), Nicolas Brieger (318599)\\Carola Thrams (314681)}
 \date{\today}
 
 \pdfinfo{%
   /Title    (Automatic Image Analysis - WS12/13 - Excercise 4 - Naive Bayes)
-  /Author   (Team E: Marcus Grum (340733), Robin Vobruba (343773), Robert Koppisch (214168), Nicolas Brieger (318599))
+  /Author   (Team E: Marcus Grum (340733), Robin Vobruba (343773), Robert Koppisch (214168), Nicolas Brieger (318599), Carola Thrams (314681))
   /Creator  ()
   /Producer ()
   /Subject  ()
@@ -47,12 +48,166 @@
 		\label{fig:#1}
 	\end{figure}
 }
-
+\newcommand{\generatedImgRoot}{../resources/img}
+\newcommand{\generatedImgRootTwo}{../../../target}
 
 \begin{document}
 
 \maketitle
 
 
+\section{Naive Bayes - Pixel-wise Object Classification with OpenCV}
+
+
+\subsection{The Task}
+In this exercise a pixel-wise object classification with help of Naive Bayes is realized.
+The task consisted of detecting multiple objects in any test image, 
+such that they are colored w.r.t. their classification. 
+This will done based on one train image, that contains n classification objects.
+For this, an input picture has been given that contains several interesting objects and 
+quite a lot disturbance objects. The whole situation can be seen in 
+fig. \ref{fig:\generatedImgRoot/Input.png}.
+
+\image{\generatedImgRoot/Input.png}{0.9}{%
+		Training picture (shows 3 categorization objects).}
+\newpage
+In this picture, you see three cars. The left one is a black car,
+the car in the center is a red one and the right car is a white one.
+Additionally, one can find there a smooth blue sky, some clouds and a white floor.
+Far away in the background, on can see the conours of a town.
+
+Each classification is introduced by two reference images. 
+The first one shows the specific classification object in white,
+the second one shows the non-classification objects as the background in black.
+The two corresponding pictures of the black car classification are shown in fig. ~\ref{fig:label1}.
+The two corresponding pictures of the red car classification are shown in fig. ~\ref{fig:label2}.
+The two corresponding pictures of the white car classification are shown in fig. ~\ref{fig:label3}.
+Because of the aim to find cars with ferrari potential, this classification is called
+the ferrari potential problem and is explained in a later chapter.
+
+\begin{figure}
+\subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/schwarzes_Auto_weiss.png}}} \hfill
+\subfigure[background classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/schwarzes_Auto_schwarz.png}}}
+\caption{reference images of black car classification}
+\label{fig:label1}
+\end{figure}
+\begin{figure}
+\subfigure[red car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/rotes_Auto_weiss.png}}}\hfill
+\subfigure[background classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/rotes_Auto_schwarz.png}}}
+\caption{reference images of black car classification}
+\label{fig:label2}
+\end{figure}
+\begin{figure}
+\subfigure[white car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/weisses_Auto_weiss.png}}}\hfill
+\subfigure[background classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/weisses_Auto_schwarz.png}}}
+\caption{reference images of black car classification}
+\label{fig:label3}
+\end{figure}
+
+\subsection{Interim Test}
+As a kind of a first interim test, we also took the training as test image,
+as one can see in fig. ~\ref{fig:label5} based on the given normRGB(...) function.
+
+\begin{figure}
+\subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_RGB_weiss.png}}}\hfill
+\subfigure[red car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_RGB_rot.png}}}
+\subfigure[white car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_RGB_schwarz.png}}}
+\caption{Naive Bayes result on training image - RGB}
+\label{fig:label5}
+\end{figure}
+
+Here, one can see in picture b) that the red parts of the car are quite well detected again.
+The black car is detected as well because in the black wheels of the car in the 
+red reference picture have been selected as well what causes the detection of the black car.
+Corresponding parts of the white care are detected as well. 
+In picture a), one can see that the reflection of the sun on the black car causes a huge
+detection of the floor as well as major parts of the white car.
+In picture c), one can see that black parts of the white care cause a detection of the 
+entire black car and some black parts of the red and white car. 
+The white car itself is not detected properly maybe because of the interlance of the
+very similar floor that has fallen to the background cluster.
+
+As a kind of a second interim test, we also took the training as test image,
+as one can see in fig. ~\ref{fig:label6} based on the given hsv(...) function.
+
+\begin{figure}
+\subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_HSV_weiss.png}}}\hfill
+\subfigure[red car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_HSV_rot.png}}}
+\subfigure[white car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_HSV_schwarz.png}}}
+\caption{Naive Bayes result on training image - HSV}
+\label{fig:label6}
+\end{figure}
+
+Those should just give a further impression for a second feature calculation method.
+
+As a kind of a third interim test, we also took the training as test image, 
+combining the given normRGB(...) and the given hsv(...) function.
+Butregrettably, herefor the RAM of our computers was not sufficient.
+
+In deed, a combination, some new feature detection methods would have been very interesting,
+but so far we were happy with the results of the normRGB(...) and continued.
+
+\subsection{Ferrari Potential Problem ;-)}
+With help of the Naive Bayes, we aime to classify baby cars, that are still very young.
+While they are becoming older, they might change into a ferrari when its owner drives passionatly.
+Given the 3 reference classifications, we try to estimate if a black car can change into a ferrari,
+if a red car can change into a ferrari, or if a white car can change into a ferrari.
+
+As a test image, of course a real ferrari has been taken, 
+as one can see in fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}.
+
+\image{\generatedImgRoot/test_image1.jpeg}{0.8}{%
+		Test picture (shows the target object - a real ferrari).}
+
+Here, one can see a red ferrari that is standing on a white floor before a white background.
+
+\section{Results:}
+
+As a result, we detected that only the red car classification classified the red ferrari correctly.
+This is because of the high ferrari potential of a red VW (similar red color)
+and can be seen in fig. \ref{fig:\generatedImgRootTwo/1rot_result_ml.png}.
+
+\image{\generatedImgRootTwo/1rot_result_ml.png}{0.8}{%
+		Naive Bayes result on test picture - RGB (based on red car classification).}
+
+Here, one can see that the area of the ferrari 
+that was shown in fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}
+has been nearly completly detected and correctly marked in red.
+The background classification is also quite good separated in green,
+at least on base of our visual impression.
+
+For a comparison, the result of Naive Bayes on base of the black and green car classification
+is shown in fig. ~\ref{fig:label4}.
+
+\begin{figure}
+\subfigure[black car classification]{\frame{\includegraphics[width=0.49\textwidth]{\generatedImgRootTwo/1schwarz_result_ml.png}}} \hfill
+\subfigure[green car classification]{\frame{\includegraphics[width=0.49\textwidth]{\generatedImgRootTwo/1weiss_result_ml.png}}}
+\caption{Naive Bayes result on test picture - RGB}
+\label{fig:label4}
+\end{figure}
+
+Here, one can see that the neither the black VW nor the green VW have a high ferrari potential,
+as they are not correctly colored in red in the pictures.
+
+\section{Interpretation:}
+
+Because of the fact, that we have used in our implementation only the normRGB(...) function,
+the red car classification can be seen as ferrari classification in our case.
+We have chosen a picture of a red ferrari because of the cliche that ferraris are red.
+The only reason, why the ferrari has been detected with help of Naive Bayes,
+has been the luckily situation, that one of the three classification cars has had
+the similar red color as the ferrari had.
+Indeed, every other ferrari picture, e.g. of a yellow one, would have had a similar bad
+classification result concerning the red car reference picture 
+as the black and white reference pictures had w.r.t. the shown red ferrari.
+
+\newpage
+\section{Printed Code:}
+
+%\lstset{language=<C++>}
+%\begin{lstlisting}
+%test
+%\end{lstlisting}
+\lstinputlisting[breaklines=true]{../native/aia4.cpp}
 
 \end{document}
