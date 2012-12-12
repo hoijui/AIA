@@ -15,16 +15,10 @@ fi
 cd "${TARGET_DIR}"
 
 # TODO
-ARGUMENTS="${IMG_DIR}/Input.png ${IMG_DIR}/Input.png ${IMG_DIR}/rotes_Auto_weiß.png ${IMG_DIR}/rotes_Auto_schwarz.png"
-# Background_schwarz.png
-# Background_weiß.png
-# Input.png
-# rotes_Auto_schwarz.png
-# rotes_Auto_weiß.png
-# schwarzes_Auto_schwarz.png
-# schwarzes_Auto_weiß.png
-# weißes_Auto_schwarz.png
-# weißes_Auto_weiß.png
+#ARGUMENTS="${IMG_DIR}/Input.png ${IMG_DIR}/Input.png ${IMG_DIR}/rotes_Auto_weiß.png ${IMG_DIR}/rotes_Auto_schwarz.png"
+#ARGUMENTS="${IMG_DIR}/Input.png ${IMG_DIR}/Input.png ${IMG_DIR}/weißes_Auto_weiß.png ${IMG_DIR}/weißes_Auto_schwarz.png"
+#ARGUMENTS="${IMG_DIR}/Input.png ${IMG_DIR}/Input.png ${IMG_DIR}/schwarzes_Auto_weiß.png ${IMG_DIR}/schwarzes_Auto_schwarz.png"
+ARGUMENTS="${IMG_DIR}/Input.png ${IMG_DIR}/Input.png ${IMG_DIR}/Background_weiß.png ${IMG_DIR}/Background_schwarz.png"
 
 
 if [ "${2}" = "debug" ]; then
