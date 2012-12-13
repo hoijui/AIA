@@ -6,9 +6,9 @@ DOC_DIR="${SCRIPT_DIR}/src/main/doc"
 
 cd "${SCRIPT_DIR}"
 
-if [ ! -e "${TARGET_DIR}/result.png" ]; then # TODO
+#if [ ! -e "${TARGET_DIR}/result.png" ]; then # TODO
 	#./run.sh
-fi
+#fi
 
 cd "${DOC_DIR}"
 pdflatex \
