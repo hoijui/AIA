@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{listings}
-\usepackage{subfigure} 
+\usepackage{subfigure}
 
 % define style of numbering
 \numberwithin{equation}{section} % use separate numbering per section
@@ -61,29 +61,26 @@
 
 \subsection{The Task}
 In this exercise a pixel-wise object classification with help of Naive Bayes is realized.
-The task consisted of detecting multiple objects in any test image, 
-such that they are colored w.r.t. their classification. 
-This will done based on one train image, that contains n classification objects.
-For this, an input picture has been given that contains several interesting objects and 
-quite a lot disturbance objects. The whole situation can be seen in 
-fig. \ref{fig:\generatedImgRoot/Input.png}.
+The task was to detect multiple objects in a test image,
+such that they are colored w.r.t. to their classification.
+This is done based on a training image, that contains n classification objects.
+For this, an input picture was chosen that contains several objects of interest as well as disturbance objects (see fig. \ref{fig:\generatedImgRoot/Input.png}).
 
 \image{\generatedImgRoot/Input.png}{0.9}{%
 		Training picture (shows 3 categorization objects).}
 \newpage
-In this picture, you see three cars. The left one is a black car,
-the car in the center is a red one and the right car is a white one.
-Additionally, one can find there a smooth blue sky, some clouds and a white floor.
-Far away in the background, on can see the conours of a town.
+In this picture three cars with differing colors, standing on a white floor, can be seen: Red, black and white.
+Additionally, the picture consists of a smooth portion portion of the blue sky and one that is disturbed by clouds.
+Far away in the background one can see the conours of a town.
 
-Each classification is introduced by two reference images. 
-The first one shows the specific classification object in white,
-the second one shows the non-classification objects as the background in black.
+Each classification is introduced by two reference images.
+The first of each series shows the specific classification object in white,
+while the second one shows the non-classification objects as the background in black.
 The two corresponding pictures of the black car classification are shown in fig. ~\ref{fig:label1}.
 The two corresponding pictures of the red car classification are shown in fig. ~\ref{fig:label2}.
 The two corresponding pictures of the white car classification are shown in fig. ~\ref{fig:label3}.
 Because of the aim to find cars with ferrari potential, this classification is called
-the ferrari potential problem and is explained in a later chapter.
+the ferrari potential problem as is explained in a later chapter.
 
 \begin{figure}
 \subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRoot/schwarzes_Auto_weiss.png}}} \hfill
@@ -105,8 +102,7 @@ the ferrari potential problem and is explained in a later chapter.
 \end{figure}
 
 \subsection{Interim Test}
-As a kind of a first interim test, we also took the training as test image,
-as one can see in fig. ~\ref{fig:label5} based on the given normRGB(...) function.
+As an interim test, in fig. ~\ref{fig:label5} the results of the given normRGB(..) function are shown.
 
 \begin{figure}
 \subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_RGB_weiss.png}}}\hfill
@@ -116,19 +112,12 @@ as one can see in fig. ~\ref{fig:label5} based on the given normRGB(...) functio
 \label{fig:label5}
 \end{figure}
 
-Here, one can see in picture b) that the red parts of the car are quite well detected again.
-The black car is detected as well because in the black wheels of the car in the 
-red reference picture have been selected as well what causes the detection of the black car.
-Corresponding parts of the white care are detected as well. 
-In picture a), one can see that the reflection of the sun on the black car causes a huge
-detection of the floor as well as major parts of the white car.
-In picture c), one can see that black parts of the white care cause a detection of the 
-entire black car and some black parts of the red and white car. 
-The white car itself is not detected properly maybe because of the interlance of the
-very similar floor that has fallen to the background cluster.
+In picture b) tje red parts of the car are detected quite well. Because of the black tyres in the red car reference image, the black car is mostly classified as a red car, too.
+Corresponding parts of the white car are detected as well.
+The effect of disturbances in the image can be seen by inspecting picture a): Due to the reflection of the sun on the back car, major parts of the floor are classified as being part of a black car.
+Another source of malclassification which is caused by the pure color-based approach is illustrated by picture c): Matching parts of the other cars are detected, while the white car itself is not classified properly. This mismatch could also be caused by the very similar floor.
 
-As a kind of a second interim test, we also took the training as test image,
-as one can see in fig. ~\ref{fig:label6} based on the given hsv(...) function.
+In a second test, the training image was used as a test image for the given hsv(..) function.
 
 \begin{figure}
 \subfigure[black car classification]{\frame{\includegraphics[width=0.33\textwidth]{\generatedImgRootTwo/result_ml_HSV_weiss.png}}}\hfill
@@ -138,45 +127,36 @@ as one can see in fig. ~\ref{fig:label6} based on the given hsv(...) function.
 \label{fig:label6}
 \end{figure}
 
-Those should just give a further impression for a second feature calculation method.
+These images give a further impression for the second feature calculation method.
 
-As a kind of a third interim test, we also took the training as test image, 
-combining the given normRGB(...) and the given hsv(...) function.
-Butregrettably, herefor the RAM of our computers was not sufficient.
+As a third test, the training image was used as a test image for a combination of the normRGB(..) and hsv(..) functions. Unfortunately, this test could not be completed because of lack of RAM capacity.
+The results of this test could have been interesting but the results of normRGB(..) were sufficient for continuation.
 
-In deed, a combination, some new feature detection methods would have been very interesting,
-but so far we were happy with the results of the normRGB(...) and continued.
+\subsection{Ferrari Potential Problem}
+With the help of the Naive Bayes approach, the Ferrari potential of a given car shall be examined as a quantification of the similarity level between this car and a Ferrari. Thus, in this example the Ferrari potential of the red, black and white cars is analyzed.
 
-\subsection{Ferrari Potential Problem ;-)}
-With help of the Naive Bayes, we aime to classify baby cars, that are still very young.
-While they are becoming older, they might change into a ferrari when its owner drives passionatly.
-Given the 3 reference classifications, we try to estimate if a black car can change into a ferrari,
-if a red car can change into a ferrari, or if a white car can change into a ferrari.
 
-As a test image, of course a real ferrari has been taken, 
-as one can see in fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}.
+The test image is now a picture of a real Ferrari and not longer the raw classification image (Fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}).
 
 \image{\generatedImgRoot/test_image1.jpeg}{0.8}{%
-		Test picture (shows the target object - a real ferrari).}
+		Test picture (shows the target object - a real Ferrari).}
 
-Here, one can see a red ferrari that is standing on a white floor before a white background.
+In this test image, a red Ferrari in front of white walls and floor can be seen.
 
 \section{Results:}
 
-As a result, we detected that only the red car classification classified the red ferrari correctly.
-This is because of the high ferrari potential of a red VW (similar red color)
-and can be seen in fig. \ref{fig:\generatedImgRootTwo/1rot_result_ml.png}.
+As expected, only the red car classification classified the Ferrari correctly: As only the color is evaluated, the red color of the VW training car dominates the end result
+(Fig.) \ref{fig:\generatedImgRootTwo/1rot_result_ml.png}).
 
 \image{\generatedImgRootTwo/1rot_result_ml.png}{0.8}{%
 		Naive Bayes result on test picture - RGB (based on red car classification).}
 
-Here, one can see that the area of the ferrari 
-that was shown in fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}
+In this picture, one can see that the area of the ferrari
+which was shown in fig. \ref{fig:\generatedImgRoot/test_image1.jpeg}
 has been nearly completly detected and correctly marked in red.
-The background classification is also quite good separated in green,
-at least on base of our visual impression.
+Apart from parts of the windshield, the background has been largely classified correctly.
 
-For a comparison, the result of Naive Bayes on base of the black and green car classification
+As a comparison, the result of Naive Bayes based on the black and green car classification
 is shown in fig. ~\ref{fig:label4}.
 
 \begin{figure}
@@ -186,20 +166,19 @@ is shown in fig. ~\ref{fig:label4}.
 \label{fig:label4}
 \end{figure}
 
-Here, one can see that the neither the black VW nor the green VW have a high ferrari potential,
-as they are not correctly colored in red in the pictures.
+Here, one can see that the neither the black VW nor the green VW have a high Ferrari potential,
+as they are not correctly colored in (foreground classification indicator) red in the pictures.
 
 \section{Interpretation:}
 
-Because of the fact, that we have used in our implementation only the normRGB(...) function,
-the red car classification can be seen as ferrari classification in our case.
-We have chosen a picture of a red ferrari because of the cliche that ferraris are red.
-The only reason, why the ferrari has been detected with help of Naive Bayes,
-has been the luckily situation, that one of the three classification cars has had
-the similar red color as the ferrari had.
-Indeed, every other ferrari picture, e.g. of a yellow one, would have had a similar bad
-classification result concerning the red car reference picture 
-as the black and white reference pictures had w.r.t. the shown red ferrari.
+Because of the fact that in our implementation only the normRGB(...) function was used,
+in the present case the red car classification can be seen as Ferrari classification.
+We have chosen a picture of a red ferrari because of the cliché that ferraris are red.
+The only reason why the ferrari has been detected with help of Naive Bayes
+has been the lucky situation that one of the three classification cars has had
+a similar color as the Ferrari.
+The direct conclusion from that is, that every picture of Ferraris differing in color, e.g. of a yellow one, would have had a similar bad
+classification result concerning the red car reference picture as the black and white reference pictures had w.r.t. the shown red Ferrari.
 
 \newpage
 \section{Printed Code:}
