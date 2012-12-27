@@ -72,46 +72,58 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-// Computes the log-likelihood of each feature vector in every component of the supplied mixture model.
-/*
-model:     	structure containing model parameters
-features:  	matrix of feature vectors
-return: 	the log-likelihood log(p(x_i|y_i=j))
-*/
+/**
+ * Computes the log-likelihood of each feature vector
+ * in every component of the supplied mixture model.
+ *
+ * @param model  structure containing model parameters
+ * @param features matrix of feature vectors
+ * @return the log-likelihood log(p(x_i|y_i=j))
+ */
 Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 
 	// TODO
 }
 
-// Computes the log-likelihood of each feature by combining the likelihoods in all model components.
-/*
-model:     structure containing model parameters
-features:  matrix of feature vectors
-return:	   the log-likelihood of feature number i in the mixture model (the log of the summation of alpha_j p(x_i|y_i=j) over j)
-*/
+/**
+ * Computes the log-likelihood of each feature by combining the likelihoods
+ * in all model components.
+ *
+ * @see aia5_WS12_em.pdf page 9
+ *
+ * @param model  structure containing model parameters
+ * @param features  matrix of feature vectors
+ * @return  the log-likelihood of feature number i in the mixture model
+ *   (the log of the summation of alpha_j p(x_i|y_i=j) over j)
+ *   p(X|Omega)
+ */
 Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 
 	// TODO
 }
 
-// Computes the posterior over components (the degree of component membership) for each feature.
-/*
-model:     	structure containing model parameters
-features:  	matrix of feature vectors
-return:		the posterior p(y_i=j|x_i)
-*/
+/**
+ * Computes the posterior over components
+ * (the degree of component membership) for each feature.
+ *
+ * @param model  structure containing model parameters
+ * @param features  matrix of feature vectors
+ * @return  the posterior p(y_i=j|x_i)
+ */
 Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
 
 	// TODO
 }
 
-// Updates a given model on the basis of posteriors previously computed in the E-Step.
-/*
-model:     structure containing model parameters, will be updated in-place
-	   new model structure in which all parameters have been updated to reflect the current posterior distributions.
-features:  matrix of feature vectors
-posterior: the posterior p(y_i=j|x_i)
-*/
+/**
+ * Updates a given model on the basis of posteriors previously computed in the E-Step.
+ *
+ * @param model  structure containing model parameters, will be updated in-place
+ *   new model structure in which all parameters have been updated to reflect
+ *   the current posterior distributions.
+ * @param features  matrix of feature vectors
+ * @param posterior  the posterior p(y_i=j|x_i)
+ */
 void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 
 	// TODO
