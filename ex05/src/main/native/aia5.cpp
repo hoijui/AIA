@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
  */
 Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 
+	cout << "calcCompLogL" << endl;
 	// TODO
 }
 
@@ -99,6 +100,12 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
  */
 Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 
+	cout << "calcMixtureLogL" << endl;
+	cout << "model.size(): " << model.size() << endl;
+	cout << "model.0.mean: " << model.at(0)->mean.rows << " " << model.at(0)->mean.cols << endl;
+	cout << "model.0.covar: " << model.at(0)->covar.rows << " " << model.at(0)->covar.cols << endl;
+	cout << "model.0.weight: " << model.at(0)->weight << endl;
+	cout << "features: " << features.rows << " " << features.cols << endl;
 	// TODO
 }
 
@@ -112,6 +119,7 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
  */
 Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
 
+	cout << "gmmEStep" << endl;
 	// TODO
 }
 
@@ -126,6 +134,7 @@ Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
  */
 void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 
+	cout << "gmmMStep" << endl;
 	// TODO
 }
 
