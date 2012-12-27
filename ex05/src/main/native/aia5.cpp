@@ -6,6 +6,9 @@
 // Description : Creates data points and estimates their distribution
 //============================================================================
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 #include <iostream>
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
@@ -90,7 +93,7 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
  * Computes the log-likelihood of each feature by combining the likelihoods
  * in all model components.
  *
- * @see aia5_WS12_em.pdf page 9
+ * @see aia5_WS12_em.pdf page 9 & 10
  *
  * @param model  structure containing model parameters
  * @param features  matrix of feature vectors
@@ -100,13 +103,32 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
  */
 Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 
+	/*
 	cout << "calcMixtureLogL" << endl;
 	cout << "model.size(): " << model.size() << endl;
 	cout << "model.0.mean: " << model.at(0)->mean.rows << " " << model.at(0)->mean.cols << endl;
 	cout << "model.0.covar: " << model.at(0)->covar.rows << " " << model.at(0)->covar.cols << endl;
 	cout << "model.0.weight: " << model.at(0)->weight << endl;
 	cout << "features: " << features.rows << " " << features.cols << endl;
+	*/
+
+	Mat logGaussianMixtureModel(model.size(), features.cols, features.type());
+	for (int i = 0; i < features.cols; ++i) {
+		for (int j = 0; j < model.size(); ++j) {
+			const double& alpha_j = model.at(j)->weight;
+			const Mat& mu_j = model.at(j)->mean;
+			const Mat& sigma_j = model.at(j)->covar;
+			const int& d = features.rows; // dimensions
+
+			const Mat& xCentered_j = features.col(i) - mu_j;
+			logGaussianMixtureModel.at<float>(i, j) = alpha_j *
+					(log(pow(determinant(sigma_j), -0.5) / pow(2 * M_PI, d / 2.0))
+					+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));
+		}
+	}
 	// TODO
+
+	return logGaussianMixtureModel;
 }
 
 /**
