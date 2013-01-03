@@ -86,6 +86,29 @@ int main(int argc, char** argv) {
 Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 
 	cout << "calcCompLogL" << endl;
+	int numFeatures = features.cols;
+	int numComponents = model.size();
+	Mat compLogL(numFeatures, numComponents, CV_32FC1);
+
+	for (int i = 0; i < numFeatures; ++i) {
+		for (int j = 0; j < numComponents; ++j) {
+			const Mat& mu_j = model.at(j)->mean;
+			const Mat& sigma_j = model.at(j)->covar;
+			const int& d = features.rows; // dimensions
+
+			const Mat& xCentered_j = features.col(i) - mu_j;
+			compLogL.at<float>(i, j) = 	0.5f*log(determinant(sigma_j)) - (d/2.0)*log(2 * M_PI)
+					- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0);
+			//compLogL.at<float>(i, j) = 	(log(pow(determinant(sigma_j), -0.5) / pow(2 * M_PI, d / 2.0))
+					//+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));
+		}
+	}
+	/*
+	cout << "Rows (compLogL): " << compLogL.rows << endl;
+	cout << "Cols (compLogL): " << compLogL.cols << endl;
+	*/
+
+	return compLogL;
 	// TODO
 }
 
@@ -106,27 +129,62 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 	/*
 	cout << "calcMixtureLogL" << endl;
 	cout << "model.size(): " << model.size() << endl;
-	cout << "model.0.mean: " << model.at(0)->mean.rows << " " << model.at(0)->mean.cols << endl;
-	cout << "model.0.covar: " << model.at(0)->covar.rows << " " << model.at(0)->covar.cols << endl;
+	cout << "model.0.mean: " << model.at(0)->mean.rows << " " << model.at(0)->mean.cols << ": " << model.at(0)->mean << endl;
+	cout << "model.0.covar: " << model.at(0)->covar.rows << " " << model.at(0)->covar.cols << ": " << model.at(0)->covar  << endl;
 	cout << "model.0.weight: " << model.at(0)->weight << endl;
 	cout << "features: " << features.rows << " " << features.cols << endl;
-	*/
+    */
 
-	Mat logGaussianMixtureModel(model.size(), features.cols, features.type());
+	int numFeatures = features.cols;
+	int numComponents = model.size();
+
+
+	//getting all log likelihoods for each feature according to each single component
+	Mat compLogL(numFeatures, numComponents, CV_32FC1);
+	compLogL = calcCompLogL(model, features);
+
+
+	//Mat logGaussianMixtureModel(model.size(), features.cols, features.type());
+	Mat logGaussianMixtureModel(numFeatures, 1, features.type());
+
+
 	for (int i = 0; i < features.cols; ++i) {
+
+		//getting the log_c-scale-factor
+		double log_c;
+		double alpha_j = model.at(0)->weight;
+		double log_alpha_j = log(alpha_j);
+		double log_prob_j  = compLogL.at<float>(i,0);
+		log_c = log_alpha_j + log_prob_j;
 		for (int j = 0; j < model.size(); ++j) {
-			const double& alpha_j = model.at(j)->weight;
-			const Mat& mu_j = model.at(j)->mean;
+			alpha_j = model.at(j)->weight;
+			log_alpha_j = log(alpha_j);
+			log_prob_j  = compLogL.at<float>(i,j);
+			if(log_c < (log_alpha_j + log_prob_j)){
+				log_c = log_alpha_j + log_prob_j;
+			}
+		}
+		double inner_log_sum = 0;
+		for (int j = 0; j < model.size(); ++j) {
+			alpha_j = model.at(j)->weight;
+			log_alpha_j = log(alpha_j);
+			log_prob_j = compLogL.at<float>(i,j);
+			inner_log_sum += exp(log_alpha_j + log_prob_j - log_c);
+
+			/*const Mat& mu_j = model.at(j)->mean;
 			const Mat& sigma_j = model.at(j)->covar;
 			const int& d = features.rows; // dimensions
 
 			const Mat& xCentered_j = features.col(i) - mu_j;
 			logGaussianMixtureModel.at<float>(i, j) = alpha_j *
 					(log(pow(determinant(sigma_j), -0.5) / pow(2 * M_PI, d / 2.0))
-					+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));
+					+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));*/
 		}
+		logGaussianMixtureModel.at<float>(i, 1) = log_c + log(inner_log_sum);
+		//cout << "likelihood feature " << i << ": " << exp(logGaussianMixtureModel.at<float>(i, 1)) << endl;
 	}
 	// TODO
+
 
 	return logGaussianMixtureModel;
 }
@@ -183,6 +241,8 @@ void trainGMM(Mat& data, int numberOfComponents) {
 	vector<struct comp*> model;
 	model.push_back(&fst);
 
+	plotGMM(model, data);
+
 	// the data-log-likelihood
 	double dataLogL[2] = {0,0};
 
@@ -192,8 +252,12 @@ void trainGMM(Mat& data, int numberOfComponents) {
 
 		// the current combined data log-likelihood p(X|Omega)
 		Mat mixLogL = calcMixtureLogL(model, data);
+		cout << "sum(mixLogL): " << sum(mixLogL).val[0] << endl;
 		dataLogL[0] = sum(mixLogL).val[0];
 		dataLogL[1] = 0.;
+
+		cout << "Rows (mixLogL): " << mixLogL.rows << endl;
+		cout << "Cols (mixLogL): " << mixLogL.cols << endl;
 
 		// EM iteration while p(X|Omega) increases
 		int it = 0;
@@ -202,10 +266,10 @@ void trainGMM(Mat& data, int numberOfComponents) {
 			printf("Iteration: %d\t:\t%f\r", it++, dataLogL[0]);
 
 			// E-Step (computes posterior)
-			Mat posterior = gmmEStep(model, data);
+			//Mat posterior = gmmEStep(model, data);
 
 			// M-Step (updates model parameters)
-			gmmMStep(model, data, posterior);
+			//gmmMStep(model, data, posterior);
 
 			// update the current p(X|Omega)
 			dataLogL[1] = dataLogL[0];
