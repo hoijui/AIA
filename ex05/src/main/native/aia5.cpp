@@ -87,6 +87,7 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 
 	//cout << "calcCompLogL" << endl;
 	int numFeatures = features.cols;
+	const int& d = features.rows; // dimensions
 	int numComponents = model.size();
 	Mat compLogL(numFeatures, numComponents, CV_32FC1);
 
@@ -94,10 +95,10 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 		for (int j = 0; j < numComponents; ++j) {
 			const Mat& mu_j = model.at(j)->mean;
 			const Mat& sigma_j = model.at(j)->covar;
-			const int& d = features.rows; // dimensions
 
 			const Mat& xCentered_j = features.col(i) - mu_j;
-			compLogL.at<float>(i, j) = 	0.5f*log(determinant(sigma_j)) - (d/2.0)*log(2 * M_PI)
+			compLogL.at<float>(i, j) =
+					- 0.5f * log(determinant(sigma_j)) - (d/2.0)*log(2 * M_PI)
 					- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0);
 			//compLogL.at<float>(i, j) = 	(log(pow(determinant(sigma_j), -0.5) / pow(2 * M_PI, d / 2.0))
 					//+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));
