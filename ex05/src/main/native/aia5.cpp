@@ -98,10 +98,9 @@ Mat calcCompLogL(vector<struct comp*>& model, Mat& features) {
 
 			const Mat& xCentered_j = features.col(i) - mu_j;
 			compLogL.at<float>(i, j) =
-					- 0.5f * log(determinant(sigma_j)) - (d/2.0)*log(2 * M_PI)
+					- 0.5f * log(determinant(sigma_j))
+					- (d / 2.0f) * log(2 * M_PI)
 					- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0);
-			//compLogL.at<float>(i, j) = 	(log(pow(determinant(sigma_j), -0.5) / pow(2 * M_PI, d / 2.0))
-					//+ log(- 0.5f * ((Mat)(xCentered_j.t() * sigma_j.inv() * xCentered_j)).at<float>(0, 0)));
 		}
 	}
 	/*
@@ -140,7 +139,7 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 	int numComponents = model.size();
 
 
-	//getting all log likelihoods for each feature according to each single component
+	// getting all log likelihoods for each feature according to each single component
 	//Mat compLogL(numFeatures, numComponents, CV_32FC1);
 	Mat compLogL = calcCompLogL(model, features);
 
@@ -151,17 +150,17 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 
 	for (int i = 0; i < features.cols; ++i) {
 
-		//getting the log_c-scale-factor
+		// getting the log_c-scale-factor
 		double log_c;
 		double alpha_j = model.at(0)->weight;
 		double log_alpha_j = log(alpha_j);
-		double log_prob_j  = compLogL.at<float>(i,0);
+		double log_prob_j  = compLogL.at<float>(i, 0);
 		log_c = log_alpha_j + log_prob_j;
 		for (int j = 0; j < model.size(); ++j) {
 			alpha_j = model.at(j)->weight;
 			log_alpha_j = log(alpha_j);
 			log_prob_j  = compLogL.at<float>(i,j);
-			if(log_c < (log_alpha_j + log_prob_j)){
+			if (log_c < (log_alpha_j + log_prob_j)) {
 				log_c = log_alpha_j + log_prob_j;
 			}
 		}
@@ -186,7 +185,6 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
 	}
 	// TODO
 
-
 	return logGaussianMixtureModel;
 }
 
@@ -200,7 +198,7 @@ Mat calcMixtureLogL(vector<struct comp*>& model, Mat& features) {
  */
 Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
 
-	cout << "gmmEStep" << endl;
+	//cout << "gmmEStep" << endl;
 	int numFeatures = features.cols;
 	int numComponents = model.size();
 	Mat posterior(numFeatures, numComponents, CV_32FC1);
@@ -212,7 +210,7 @@ Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
 	Mat compLogL = calcCompLogL(model, features);
 	for (int i = 0; i < numFeatures; i++){
 		prob_feature_i = mixLogL.at<float>(i, 1);
-		for(int j = 0; j < numComponents; j++){
+		for (int j = 0; j < numComponents; j++) {
 			alpha_j = model.at(j)->weight;
 			log_alpha_j = log(alpha_j);
 			prob_feature_i_componentwise = compLogL.at<float>(i, j);
@@ -220,7 +218,7 @@ Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
 		}
 	}
 
-	/*for(int j = 0; j < numComponents; j++){
+	/*for (int j = 0; j < numComponents; j++) {
 		cout << " gmmEStep mean : " << model.at(j)->mean << endl;
 	}*/
 
@@ -239,29 +237,29 @@ Mat gmmEStep(vector<struct comp*>& model, Mat& features) {
  */
 void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 
-	cout << "gmmMStep" << endl;
+	//cout << "gmmMStep" << endl;
 	int numFeatures = features.cols;
 	int numComponents = model.size();
 
-	Mat mixLogL = calcMixtureLogL(model, features);
-	Mat compLogL = calcCompLogL(model, features);
+	//Mat mixLogL = calcMixtureLogL(model, features);
+	//Mat compLogL = calcCompLogL(model, features);
 
 	//Mat mu_j;
 	double N_j;
 	double alpha_j;
 	//Mat cov_j;
-	for (int j = 0; j < numComponents; j++){
+	for (int j = 0; j < numComponents; j++) {
 		/*cout << "component : " << j << endl;
 		cout << " old mean : " << model.at(j)->mean << endl;*/
 
 		N_j = 0;
-		Mat mu_j = Mat::zeros(features.rows, 1, CV_32FC1);// = model.at(j)->mean;
-		Mat cov_j = Mat::zeros(features.rows, features.rows, CV_32FC1);//model.at(j)->covar;
+		Mat mu_j = Mat::zeros(features.rows, 1, CV_32FC1); // = model.at(j)->mean;
+		Mat cov_j = Mat::zeros(features.rows, features.rows, CV_32FC1); //model.at(j)->covar;
 
-		//more precise...
-		for(int i = 0; i < numFeatures; i++){
-			N_j += posterior.at<float>(i,j);
-			mu_j += features.col(i)*posterior.at<float>(i,j);
+		// more precise...
+		for (int i = 0; i < numFeatures; i++) {
+			N_j += posterior.at<float>(i, j);
+			mu_j += features.col(i)*posterior.at<float>(i, j);
 		}
 		//cout << " new mean : " << mu_j << endl;
 
@@ -269,22 +267,21 @@ void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 		/*N_j  = sum(posterior.col(j)).val[0];
 		mu_j.at<float>(0) = sum(features.row(0)*posterior.col(j)).val[0];
 		mu_j.at<float>(1) = sum(features.row(1)*posterior.col(j)).val[0];*/
-		if (!(mu_j.at<float>(0) == 0)){
+		if (mu_j.at<float>(0) != 0) {
 			mu_j = mu_j / N_j;
 		}
-		for(int i = 0; i < numFeatures; i++){
+		for (int i = 0; i < numFeatures; i++) {
 			Mat xCentered_j = features.col(i) - mu_j;
-			if (i == 0){
-				cov_j = ((Mat)(xCentered_j * xCentered_j.t()))*posterior.at<float>(i,j);
+			if (i == 0) {
+				// FIXME something wrong here!
+				cov_j = ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
 			}
-			cov_j += ((Mat)(xCentered_j * xCentered_j.t()))*posterior.at<float>(i,j);
+			cov_j += ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
 		}
-		if (!(cov_j.at<float>(0,1) == 0)){
-			cov_j = cov_j/N_j;
+		if (cov_j.at<float>(0, 1) != 0) {
+			cov_j = cov_j / N_j;
 		}
 		alpha_j = N_j / numFeatures;
-
-
 
 		model.at(j)->weight = alpha_j;
 		model.at(j)->mean = mu_j;
@@ -298,10 +295,7 @@ void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 			cout << "     mean " << k << " : " << model.at(k)->mean << endl;
 		}
 		*/
-
 	}
-
-
 	// TODO
 }
 
@@ -348,9 +342,9 @@ void trainGMM(Mat& data, int numberOfComponents) {
 
 		// EM iteration while p(X|Omega) increases
 		int it = 0;
-		while( (dataLogL[0] > dataLogL[1]) or (it == 0) ) {
+		while ( (dataLogL[0] > dataLogL[1]) || (it == 0) ) {
 
-			printf("Iteration: %d\t:\t%f\r", it++, dataLogL[0]);
+			printf("Iteration: %d\t: %f\n", it++, dataLogL[0]);
 
 			// E-Step (computes posterior)
 			Mat posterior = gmmEStep(model, data);
