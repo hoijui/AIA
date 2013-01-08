@@ -54,9 +54,85 @@
 
 \maketitle
 
+\section{Expectation Maximization - Object Recognition and Categorization with OpenCV}
 
 
+\subsection{The Task}
+In this exercise a object recognition and categorization 
+with help of Expectation Maximization is realized.
+The task was to detect a certain number of clusters 
+in a 2 dimensional dataset based on the same number of multivariate normal distribution
+(150 data samples per distribution),
+such that they are visualized w.r.t. to their position in the corresponding dimensions.
+The recognition itself is done again based on a multivariate normal distributions, 
+that were trained previously.
 
+%\newpage
+\section{Additional Documentation:}
+
+Based on a very great documentation in the exercise slides,
+in this section, only key aspects are shown that have been modified in our implementation.
+
+Values $p( \vec x | \vec \mu, \vec \Sigma)$ are often very small.
+In order to handle those, logarithms have used throughout.
+On two positions, it has been used in a simplified way in our implementation.
+Firstly, it has been used in the function clcCompLogL 
+as follows.\\
+The formula
+\begin{align}
+p( \vec x_i | \mu_j, \Sigma_j) =
+    \frac{|\Sigma_j|^{-1/2}}{2 \pi^{d/2}}
+    exp  \left( 
+                     - \frac{1}{2} ( \vec x_i - \vec \mu_j )^T
+                       \vec \Sigma_j^{-1}
+                       \frac{1}{2} ( \vec x_i - \vec \mu_j )
+    \right)
+\end{align}
+has been implemented as follows:
+\begin{align}
+log \left( p( \vec x_i | \vec \mu_c, \vec \Sigma_c) \right) =
+                     - \frac{1}{2} log \left( det(\vec \Sigma_c) \right)
+                     - \frac{1}{2} ( \vec x_i - \vec \mu_c )^T
+                       \vec \Sigma_c^{-1}
+                       \frac{1}{2} ( \vec x_i - \vec \mu_c )
+                     - \frac{d}{2} log(2 \pi)
+\end{align}
+Secondly, the logarithms and a simplification have been used in the function calcMixtureLogL
+as follows.\\
+The formula
+\begin{align}
+log \left( \sum\nolimits_{j=1}^{N_c} \alpha_j p( \vec x_j | \theta_j )  \right) = 
+      log \left( c \sum\nolimits_{j=1}^{N_c} \frac{1}{c} \alpha_j p( \vec x_j | \theta_j ) \right)
+\end{align}
+has been implemented as follows:
+\begin{align}
+... = log \left( c \right)
+      + log \left(\sum\nolimits_{j=1}^{N_c} exp( log (\alpha_j)
+         + log \left( p( \vec x_j | \theta_j ) \right) 
+         - log \left( c \right) \right)
+\end{align}
+, where
+\begin{align}
+log(c) \approx max \left( log(\alpha_j) + log \left( p( \vec x_j | \theta_j ) \right) \right)
+\end{align}
+%\newpage
+\section{Results:}
+
+In Fig. ~\ref{fig:label1}, you can see the results for an increasing number of clusters.
+Each data sample is visualized by a blue point. 
+The center of each cluster is marked with a red circle.
+Their corresponding variances are visualized with help of an ellipse.
+
+\begin{figure}
+\subfigure[1 Cluster ]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}} \hfill
+\subfigure[2 Clusters]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}} \hfill
+\subfigure[3 Clusters]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}} \hfill
+\subfigure[4 Clusters]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}} \hfill
+\subfigure[5 Clusters]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}} \hfill
+\subfigure[6 Clusters]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/1_Cluster.png}}}
+\caption{result images of Categorization}
+\label{fig:label1}
+\end{figure}
 
 \newpage
 \section{Printed Code:}
