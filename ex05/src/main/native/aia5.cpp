@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <sstream>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
@@ -273,7 +274,6 @@ void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior) {
 		for (int i = 0; i < numFeatures; i++) {
 			Mat xCentered_j = features.col(i) - mu_j;
 			if (i == 0) {
-				// FIXME something wrong here!
 				cov_j = ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
 			}
 			cov_j += ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
@@ -430,6 +430,8 @@ void initNewComponent(vector<struct comp*>& model, Mat& features) {
 	model.push_back(newModel);
 }
 
+static int numClus = 0;
+
 // Visualises the contents of a feature space and the associated mixture model.
 /*
 model: 		parameters of a Gaussian mixture model
@@ -479,5 +481,8 @@ void plotGMM(vector<struct comp*>& model, Mat& features) {
 
 	// show plot an abd wait for key
 	imshow("Current model", plot);
+	ostringstream ss;
+	ss << numClus++ << "_Cluster.png";
+	imwrite(ss.str(), plot);
 	waitKey(0);
 }
