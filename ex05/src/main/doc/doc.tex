@@ -60,22 +60,22 @@
 \subsection{The Task}
 In this exercise, object recognition and categorization
 with help of Expectation Maximization (EM) is realized.
-The task was, to detect a certain number of clusters in a 2 dimensional dataset,
+The task was to detect a certain number of clusters in a 2 dimensional dataset,
 based on the same number of samples per each of six different,
-multivariate normal distributed clusters
+multivariate normal distributed, clusters
 (150 data samples per distribution),
 such that they are visualized w.r.t. to their position in the corresponding dimensions.
-The recognition itself is done again based on a multivariate normal distributions, 
+The recognition itself is done again based on a multivariate normal distributions 
 that are trained through EM.
 
 %\newpage
 \section{Additional Documentation:}
 
-Based on the very great documentation in the exercise slides,
-in this section, only key aspects are shown that have been modified in our implementation.
+Based on the extensive documentation in the exercise slides
+in this section only key aspects that have been modified in our implementation are shown.
 
-Values $p( \vec x | \vec \mu, \vec \Sigma)$ are often very small.
-In order to handle those, we used the log-likelyhood instead.
+Values $p( \vec x | \vec \mu, \vec \Sigma)$ are often very small which can, due to numerical errors, affect the outcome of the EM algorithms in a negative way.
+In order to handle those instead of the original likelihood the logarithms of said likelihoods are used.
 On two positions, it has been used in a simplified way in our implementation.
 Firstly, it has been used in the function \lstinline!calcCompLogL()!
 as follows.
