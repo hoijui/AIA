@@ -326,8 +326,9 @@ void gmmMStep(vector<struct comp*>& model, Mat& features, Mat& posterior){
 			Mat xCentered_j = features.col(i) - mu_j;
 			if (i == 0) {
 				cov_j = ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
+			} else {
+				cov_j += ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
 			}
-			cov_j += ((Mat)(xCentered_j * xCentered_j.t())) * posterior.at<float>(i, j);
 		}
 		if (cov_j.at<float>(0, 1) != 0) {
 			cov_j = cov_j / N_j;
