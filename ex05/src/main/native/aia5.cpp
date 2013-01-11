@@ -344,7 +344,8 @@ void trainGMM(Mat& data, int numberOfComponents) {
 		int it = 0;
 		while ( (dataLogL[0] > dataLogL[1]) || (it == 0) ) {
 
-			printf("Iteration: %d\t: %f\n", it++, dataLogL[0]);
+			it++;
+			//printf("Iteration: %d\t: %f\n", it, dataLogL[0]);
 
 			// E-Step (computes posterior)
 			Mat posterior = gmmEStep(model, data);
