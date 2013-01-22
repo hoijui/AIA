@@ -424,8 +424,12 @@ void readImageDatabase(string dataPath, vector<Mat>& db) {
 
 		int i = 0;
 		for (list<Mat>::iterator img = imgList.begin(); img != imgList.end(); img++, i++) {
-			for (int p = 0; p<numberOfPixPerImg; p++) {
-				feature.at<float>(i, p) = img->at<float>(p);
+			int p = 0;
+			for (int ri = 0; ri < img->rows; ri++) {
+				for (int ci = 0; ci < img->rows; ci++) {
+					feature.at<float>(i, p) = img->at<float>(ri, ci);
+					p++;
+				}
 			}
 		}
 		db.push_back(feature);
