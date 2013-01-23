@@ -48,17 +48,65 @@
 	\end{figure}
 }
 \newcommand{\imgRoot}{../resources/img}
-\newcommand{\imgGeneratedRoot}{../../../target}
+\newcommand{\imgGeneratedRoot}{../../../target/pics}
 
 \begin{document}
 
 \maketitle
 
+\section{Results:}
 
+As expected, the result of a good Confusion Matrix shows mostly high diagonal elements,
+as can be seen in Fig. \ref{fig:\imgGeneratedRoot/ConfusionMatrix_20PCA_10Cluster.jpg}.
+This means, that the number that was chosen in the reality - x-axis - has correctly chosen
+by our algorithm - y-axis.
+Our algorithm has - based on 20 Principal Components and 10 Clusters
+as they have been used in Fig. \ref{fig:\imgGeneratedRoot/ConfusionMatrix_20PCA_10Cluster.jpg} -
+correctly detected 946 numbers.
 
+\image{\imgGeneratedRoot/ConfusionMatrix_20PCA_10Cluster.jpg}{0.8}{%
+		resulting good Confusion Matrix.}
 
+In Fig.~\ref{fig:worseConfusionMatrices}, you can see the results for two worse Confusion Matrices.
+Logically, the use of one Cluster and only one Principal Component is worse (left side).
+It only has detected 43 numbers correctly.
+A bit surprising has been the worse result of the maximum of clusters and principal components 
+of our consideration (right side). The use of 30 clusters and 30 prinsipal components only detected 99 numbers
+correctly. In our explanation, this is because of our EM-algorithm. In this region, the 
+values become numerically instable and the fitting becomes wrong.
 
+\begin{figure}
+\subfigure[1 PCAs and 1 Cluster ]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/ConfusionMatrix_1PCA_1Cluster.jpg}}} \hfill
+\subfigure[30 PCAs and 10 Cluster]{\frame{\includegraphics[width=0.49\textwidth]{\imgGeneratedRoot/ConfusionMatrix_30PCA_10Cluster.jpg}}} \hfill
+\caption{resulting worse Confusion Matrices.}
+\label{fig:worseConfusionMatrices}
+\end{figure}
+
+Our results have been visualized in Fig. \ref{fig:\imgGeneratedRoot/PerformanceAnalysation.jpg}.
+For this, we have generated numbers of the grid containing elements for 1, 3, 7 and 10 clusters
+and for 1, 5, 10, 20 and 30 principal components. The numbers in between the grid elements
+have been interpolated linearly.
+
+\image{\imgGeneratedRoot/PerformanceAnalysation.jpg}{0.8}{%
+		resulting performance.}
+
+In the figure, one can see that the results of correctly classified numbers increases with increasing
+cluster and increasing principal components untill the very top right.
+At this corner, the classification correctness falls immeadetly. 
+For this, we have given an explanation above. 
+The question remains, why the result given in the exercise presentation do not show such a drop...?
+In our explanation, this is because we have chosen other grid elements.
+If we had chosen the 25th PCA element as last grid element and had interpolated the missing
+numbers thill the 30th element, we would not have detected such a drop.
+
+\newpage
+\section{Printed Code C++:}
 
 \lstinputlisting[breaklines=true,language=C++]{../native/aia6.cpp}
+
+\newpage
+\section{Printed Code Matlab-Visualisierung:}
+
+\lstinputlisting[breaklines=true,language=C++]{../native/Visualisierung.m}
 
 \end{document}
