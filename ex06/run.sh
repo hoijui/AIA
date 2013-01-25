@@ -28,7 +28,7 @@ fi
 
 ARGUMENTS=""
 
-if [ "${2}" = "debug" ]; then
+if [ "${1}" = "debug" ]; then
 	echo "ARGUMENTS: ${ARGUMENTS}"
 	ddd "${EXECUTABLE}" &
 else
