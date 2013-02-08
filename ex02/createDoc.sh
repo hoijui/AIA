@@ -13,7 +13,7 @@ pdflatex \
 		-interaction=nonstopmode \
 		-output-format=pdf \
 		-output-directory="${TARGET_DIR}" \
-		doc.tex
+		doc.tex > /dev/null
 
 cd "${TARGET_DIR}"
 mv doc.pdf AIA_WS1213_GruppeE_Ex02.pdf

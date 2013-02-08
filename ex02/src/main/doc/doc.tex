@@ -111,14 +111,17 @@ and in fig. \ref{fig:\generatedImgRoot/pic_RawFourierDescriptor2}.
 The function $f$ stands for the contours of the object.
 The contours of the object are represented as a vector of points, extracted from the training
 images aswell as the original one. In order to reach an efficient, precise and robust representation of the contour, 
-it will be represented with help of Fourier Descriptors. The fourier descriptor then is normalized as follows:
+it will be represented with help of Fourier Descriptors.
+The fourier descriptor then is made invariant as follows:
 
+invariances:
 \begin{itemize}
-\item Force translation invariance: The first element of the frequency vectors is set to 0.
-\item Force scale invariance:  All elements of the frequencies vectors are divided by the 2nd element.
-\item Force rotation invariance: The phase information of the frequencies are deleted.
-\item Force less sensitivity to details: Therefore, the number of frequencies has been reduced.
-In our implementation, we kept the \iFDNormDimensions{} low frequency components, while the rest was set to 0.
+\item \emph{translation}: The first element of the frequency vectors is set to 0.
+\item \emph{scale invariance}:  All elements of the frequencies vectors are divided by the 2nd element.
+\item \emph{rotation invariance}: The phase information of the frequencies are deleted.
+\item \emph{details sensitivity}: Remove high frequencies.
+  In our implementation, we kept the \iFDNormDimensions{} lowest frequency components,
+  while the rest was set to 0.
 \end{itemize}
 
 Thanks to the Fourier Descriptors and the mentioned modifications, 
